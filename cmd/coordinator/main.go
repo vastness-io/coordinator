@@ -16,6 +16,9 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"net/http"
 )
 
 const (
@@ -80,6 +83,7 @@ func run() {
 	log.Info("Starting coordinator")
 
 	var (
+		mux      = http.NewServeMux()
 		address  = net.JoinHostPort(addr, strconv.Itoa(port))
 		tracer   = opentracing.GlobalTracer()
 		lis, err = net.Listen("tcp", address)
@@ -91,13 +95,13 @@ func run() {
 	}
 
 	go func() {
-		log.Infof("Listening on %s", address)
+		log.Infof("GRPC server listening on %s", address)
 		if err := srv.Serve(lis); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
-	linguistConn, err := grpc.Dial(linguistSrv, grpc.WithInsecure())
+	linguistConn, err := toolkit.NewGRPCClient(tracer, log, grpc.WithInsecure())(linguistSrv)
 
 	if err != nil {
 		log.Fatal(err)
@@ -113,7 +117,17 @@ func run() {
 
 	github.RegisterGithubWebhookServer(srv, githubWebhookServer)
 
+	grpc_prometheus.Register(srv)
+
+	mux.Handle("/metrics", promhttp.Handler())
+
+	go func() {
+		log.Infof("HTTP server listening on %s", address)
+		http.Serve(lis, mux)
+	}()
+
 	signalChan := make(chan os.Signal, 1)
+
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
 	for {

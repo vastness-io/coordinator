@@ -27,7 +27,7 @@ func (s *githubWebhookService) GetLanguagesUsedInRepository(req *linguist.Langua
 	res, err := s.linguist.GetLanguages(ctx, req)
 
 	if err != nil {
-		s.logger.WithError(err).Error("Unable to detect Language(s) for repository")
+		s.logger.Error("Unable to detect Language(s) for repository")
 		return make([]*linguist.Language, 0)
 	}
 
