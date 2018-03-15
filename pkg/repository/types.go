@@ -11,15 +11,15 @@ var (
 )
 
 type ProjectRepository interface {
-	DB ()  *gorm.DB
-	Create(tx *gorm.DB, project *model.Project) error
-	GetProject(tx *gorm.DB, name string, vcsType string) (*model.Project, error)
-	GetProjects(tx *gorm.DB) ([]*model.Project, error)
-	Delete(tx *gorm.DB, name string, vcsType string) (bool, error)
-	Update(tx *gorm.DB, project *model.Project) error
+	DB ()  DB
+	Create(tx DB, project *model.Project) error
+	GetProject(tx DB, name string, vcsType string) (*model.Project, error)
+	GetProjects(tx DB) ([]*model.Project, error)
+	Delete(tx DB, name string, vcsType string) (bool, error)
+	Update(tx DB, project *model.Project) error
 }
 
-/*
+
 type gormDBWrapper struct {
 	*gorm.DB
 }
@@ -39,11 +39,11 @@ func (t *gormDBWrapper) Commit() DB {
 }
 
 func (t *gormDBWrapper) Find(value interface{}, where ...interface{}) error {
-	return t.DB.Find(value, where).Error
+	return t.DB.Find(value, where...).Error
 }
 
 func (t *gormDBWrapper) First(out interface{}, where ...interface{}) error {
-	return t.DB.First(out, where).Error
+	return t.DB.First(out, where...).Error
 }
 
 func (t *gormDBWrapper) Create(value interface{}) error {
@@ -55,7 +55,7 @@ func (t *gormDBWrapper) Save(value interface{}) error {
 }
 
 func (t *gormDBWrapper) Delete(value interface{}, where ...interface{}) error {
-	return t.DB.Delete(value, where).Error
+	return t.DB.Delete(value, where...).Error
 }
 
 func (t *gormDBWrapper) GetError() error {
@@ -80,4 +80,3 @@ type DB interface {
 	Commit() DB
 	GetError() error
 }
-*/

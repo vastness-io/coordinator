@@ -176,7 +176,8 @@ func run() {
 	}
 
 	var (
-		projectRepository = repository.NewProjectRepository(gormDB)
+		db = repository.NewDB(gormDB)
+		projectRepository = repository.NewProjectRepository(db)
 		linguistClient    = linguist.NewLinguistClient(linguistConn)
 		vcsEventService   = webhook.NewVcsEventService(log, linguistClient, projectRepository)
 		vcsEventServer    = server.NewVcsEventServer(vcsEventService, log)

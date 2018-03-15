@@ -7,27 +7,27 @@ import (
 )
 
 type projectRepository struct {
-	tx *gorm.DB
+	tx DB
 }
 
-func NewProjectRepository(tx *gorm.DB) ProjectRepository {
+func NewProjectRepository(tx DB) ProjectRepository {
 	return &projectRepository{
 		tx: tx,
 	}
 }
 
-func (r *projectRepository) DB()  *gorm.DB {
+func (r *projectRepository) DB() DB {
 	return r.tx
 }
 
-func (r *projectRepository) Create(tx *gorm.DB, project *model.Project) error {
-	return tx.Create(project).Error
+func (r *projectRepository) Create(tx DB, project *model.Project) error {
+	return tx.Create(project)
 }
 
-func (r *projectRepository) GetProject(tx *gorm.DB, name string, vcsType string) (*model.Project, error) {
+func (r *projectRepository) GetProject(tx DB, name string, vcsType string) (*model.Project, error) {
 	var out model.Project
 
-	err := tx.First(&out, "name = ? AND type = ?", name, vcsType).Error
+	err := tx.First(&out, "name = ? AND type = ?", name, vcsType)
 
 	if err != nil {
 
@@ -41,10 +41,10 @@ func (r *projectRepository) GetProject(tx *gorm.DB, name string, vcsType string)
 	return &out, nil
 }
 
-func (r *projectRepository) GetProjects(tx *gorm.DB) ([]*model.Project, error) {
+func (r *projectRepository) GetProjects(tx DB) ([]*model.Project, error) {
 	var out []*model.Project
 
-	err := tx.Find(out).Error
+	err := tx.Find(out)
 
 	if err != nil {
 
@@ -57,12 +57,12 @@ func (r *projectRepository) GetProjects(tx *gorm.DB) ([]*model.Project, error) {
 	return out, nil
 }
 
-func (r *projectRepository) Delete(tx *gorm.DB, name string, vcsType string) (bool, error) {
+func (r *projectRepository) Delete(tx DB, name string, vcsType string) (bool, error) {
 	toBeDeleted := model.Project{
 		Name: name,
 		Type: vcsType,
 	}
-	err := tx.Delete(&toBeDeleted).Error
+	err := tx.Delete(&toBeDeleted)
 
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
@@ -74,6 +74,6 @@ func (r *projectRepository) Delete(tx *gorm.DB, name string, vcsType string) (bo
 	return true, nil
 }
 
-func (r *projectRepository) Update(tx *gorm.DB, project *model.Project) error {
-	return tx.Save(project).Error
+func (r *projectRepository) Update(tx DB, project *model.Project) error {
+	return tx.Save(project)
 }
