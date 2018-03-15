@@ -5,6 +5,7 @@ import:
   - ptypes/empty
 - package: github.com/sirupsen/logrus
 - package: github.com/vastness-io/linguist-svc
+  version: ^0.1.0
 - package: google.golang.org/grpc
   subpackages:
   - codes
@@ -17,5 +18,8 @@ import:
 - package: github.com/urfave/cli
   version: ^1.20.0
 - package: github.com/grpc-ecosystem/go-grpc-middleware
-- package: github.com/golang/mock
-  version: ^1.0.0
+- package: github.com/jinzhu/gorm
+  version: ^1.9.1
+- package: github.com/lib/pq
+- package: github.com/mattes/migrate
+  version: ^3.0.1

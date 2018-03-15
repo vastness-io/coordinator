@@ -1,0 +1,28 @@
+# Default values for golang.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 2
+image:
+  pullPolicy: IfNotPresent
+service:
+  name: api-server
+  type: ClusterIP
+  externalPort: 80
+  internalPort: 8080
+envvars:
+  - name: DATABASE_HOST
+    value: coordinator-postgresql
+  - name: DATABASE_PORT
+    value: "5432"
+  - name: DATABASE_USER
+    value: postgres
+  - name: DATABASE_PASS
+    value: postgres
+
+postgresql:
+    fullname: coordinator-postgres
+    postgresUser: postgres
+    postgresPassword: postgres
+    postgresDatabase: project
+    persistence:
+      enabled: false

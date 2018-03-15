@@ -14,3 +14,12 @@ build:
 
 verify:
 	./hack/verify-version.sh
+
+up: build
+	docker build -t vastness.io/coordinator:${VERSION} .
+	docker-compose up
+
+
+generate:
+	@echo "=> generating mocks"
+	./hack/generate-mocks.sh

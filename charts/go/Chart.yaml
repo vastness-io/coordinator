@@ -1,0 +1,4 @@
+apiVersion: v1
+description: The API server for Vastness
+name: go
+version: v0.1.0
