@@ -1,4 +1,4 @@
-package webhook
+package event
 
 import (
 	"github.com/vastness-io/coordinator/pkg/model"

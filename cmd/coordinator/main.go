@@ -14,7 +14,7 @@ import (
 	"github.com/urfave/cli"
 	"github.com/vastness-io/coordinator/pkg/repository"
 	"github.com/vastness-io/coordinator/pkg/server"
-	"github.com/vastness-io/coordinator/pkg/service/webhook"
+	"github.com/vastness-io/coordinator/pkg/service/event"
 	"github.com/vastness-io/linguist-svc"
 	toolkit "github.com/vastness-io/toolkit/pkg/grpc"
 	vcswebhook "github.com/vastness-io/vcs-webhook-svc/webhook"
@@ -176,10 +176,10 @@ func run() {
 	}
 
 	var (
-		db = repository.NewDB(gormDB)
+		db                = repository.NewDB(gormDB)
 		projectRepository = repository.NewProjectRepository(db)
 		linguistClient    = linguist.NewLinguistClient(linguistConn)
-		vcsEventService   = webhook.NewVcsEventService(log, linguistClient, projectRepository)
+		vcsEventService   = event.NewVcsEventService(log, linguistClient, projectRepository)
 		vcsEventServer    = server.NewVcsEventServer(vcsEventService, log)
 	)
 

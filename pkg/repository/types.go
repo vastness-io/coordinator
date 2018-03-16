@@ -11,14 +11,13 @@ var (
 )
 
 type ProjectRepository interface {
-	DB ()  DB
+	DB() DB
 	Create(tx DB, project *model.Project) error
 	GetProject(tx DB, name string, vcsType string) (*model.Project, error)
 	GetProjects(tx DB) ([]*model.Project, error)
 	Delete(tx DB, name string, vcsType string) (bool, error)
 	Update(tx DB, project *model.Project) error
 }
-
 
 type gormDBWrapper struct {
 	*gorm.DB
@@ -62,7 +61,6 @@ func (t *gormDBWrapper) GetError() error {
 	return t.DB.Error
 }
 
-
 func NewDB(db *gorm.DB) DB {
 	return &gormDBWrapper{
 		DB: db,
@@ -70,8 +68,8 @@ func NewDB(db *gorm.DB) DB {
 }
 
 type DB interface {
-	First(interface{},  ...interface{}) error
-	Find(interface{},  ...interface{}) error
+	First(interface{}, ...interface{}) error
+	Find(interface{}, ...interface{}) error
 	Create(interface{}) error
 	Save(interface{}) error
 	Delete(interface{}, ...interface{}) error

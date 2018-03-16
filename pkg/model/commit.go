@@ -6,11 +6,12 @@ import (
 )
 
 type Commit struct {
-	Sha         string `gorm:"primary_key;size:255;unique_index"`
-	Message     string `gorm:"type:varchar(255)"`
+	ID          int64  `gorm:"primary_key"`
+	Sha         string `gorm:"primary_key;size:256"`
+	Message     string `gorm:"type:varchar(256)"`
 	Timestamp   *time.Time
-	AuthorName  string         `gorm:"type:varchar(255)"`
-	AuthorEmail string         `gorm:"type:varchar(255)"`
+	AuthorName  string `gorm:"type:varchar(256)"`
+	AuthorEmail string `gorm:"type:varchar(256)"`
 	Added       pq.StringArray
 	Modified    pq.StringArray
 	Removed     pq.StringArray

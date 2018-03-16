@@ -4,16 +4,16 @@ import (
 	"context"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/sirupsen/logrus"
-	service "github.com/vastness-io/coordinator/pkg/service/webhook"
+	"github.com/vastness-io/coordinator/pkg/service/event"
 	"github.com/vastness-io/vcs-webhook-svc/webhook"
 )
 
 type vcsEventServer struct {
-	service service.Service
+	service event.Service
 	log     *logrus.Entry
 }
 
-func NewVcsEventServer(service service.Service, logger *logrus.Entry) vcs.VcsEventServer {
+func NewVcsEventServer(service event.Service, logger *logrus.Entry) vcs.VcsEventServer {
 	return &vcsEventServer{
 		service: service,
 		log:     logger,

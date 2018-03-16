@@ -1,4 +1,4 @@
-package webhook
+package event
 
 import (
 	"context"
@@ -50,21 +50,26 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 		current = project
 	}
 
-
 	for _, repo := range current.Repositories {
 		for _, branch := range repo.Branches {
 			req := linguist.LanguageRequest{}
 
 			var files []string
 			for _, commit := range branch.Commits {
-				files = append(files, commit.Added...)
-				files = append(files, commit.Modified...)
+
+				for _, add := range commit.Added {
+					files = append(files, RemoveDirectoryPrefix(add))
+				}
+
+				for _, mod := range commit.Modified {
+					files = append(files, RemoveDirectoryPrefix(mod))
+				}
 				//TODO handle removed files
 			}
 
 			req.FileNames = files
 
-			branch.Languages = convertLangResponse(s.GetLanguagesUsedInRepository(&req))
+			branch.Meta.Languages = convertLangResponse(s.GetLanguagesUsedInRepository(&req))
 		}
 
 	}
@@ -96,13 +101,13 @@ func (s *vcsEventService) GetLanguagesUsedInRepository(req *linguist.LanguageReq
 
 }
 
-func convertLangResponse(res []*linguist.Language) []*model.Language {
-	var out []*model.Language
+func convertLangResponse(res []*linguist.Language) []model.Language {
+	var out []model.Language
 
 	for _, lang := range res {
-		out = append(out, &model.Language{
-			Name:       lang.GetName(),
+		out = append(out, model.Language{
 			Percentage: lang.GetPercentage(),
+			Name:       lang.GetName(),
 		})
 	}
 	return out

@@ -5,10 +5,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"github.com/sirupsen/logrus"
+	"github.com/vastness-io/coordinator/pkg/model"
 	"github.com/vastness-io/linguist-svc"
 	"github.com/vastness-io/vcs-webhook-svc/webhook"
 	"testing"
-	"github.com/vastness-io/coordinator/pkg/model"
 )
 
 type NOOPService struct{}
