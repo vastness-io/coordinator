@@ -50,7 +50,8 @@ func ConvertToProjectModel(from *vcs.VcsPushEvent) *model.Project {
 
 func ConvertEventRepositoryToRepositoryModel(from *vcs.Repository) *model.Repository {
 	return &model.Repository{
-		Name: from.GetName(),
+		RepositoryID: from.GetId(),
+		Name:         from.GetName(),
 	}
 }
 

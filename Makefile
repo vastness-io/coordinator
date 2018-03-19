@@ -10,6 +10,7 @@ test:
 	./hack/run-tests.sh
 
 build:
+	rm -rf ./bin
 	./hack/cross-platform-build.sh
 
 verify:
@@ -18,7 +19,6 @@ verify:
 up: build
 	docker build -t vastness.io/coordinator:${VERSION} .
 	docker-compose up
-
 
 generate:
 	@echo "=> generating mocks"

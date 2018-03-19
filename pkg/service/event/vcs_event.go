@@ -43,11 +43,14 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 		if err != errors.ProjectDoesNotExistErr {
 			return nil, err
 		}
+
 		if err := s.repository.Create(tx, project); err != nil {
 			tx.Rollback()
 			return nil, err
 		}
 		current = project
+	} else {
+		current = MergeProjects(current, project)
 	}
 
 	for _, repo := range current.Repositories {
@@ -74,6 +77,7 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 
 	}
 
+	s.logger.Info("before update")
 	err = s.repository.Update(tx, current)
 
 	if err != nil {

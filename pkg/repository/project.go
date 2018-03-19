@@ -27,7 +27,7 @@ func (r *projectRepository) Create(tx DB, project *model.Project) error {
 func (r *projectRepository) GetProject(tx DB, name string, vcsType string) (*model.Project, error) {
 	var out model.Project
 
-	err := tx.First(&out, "name = ? AND type = ?", name, vcsType)
+	err := tx.Preload("Repositories").First(&out, "name = ? AND type = ?", name, vcsType)
 
 	if err != nil {
 

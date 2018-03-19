@@ -57,6 +57,10 @@ func (t *gormDBWrapper) Delete(value interface{}, where ...interface{}) error {
 	return t.DB.Delete(value, where...).Error
 }
 
+func (t *gormDBWrapper) Preload(column string, conditions ...interface{}) DB {
+	return NewDB(t.DB.Preload(column, conditions...))
+}
+
 func (t *gormDBWrapper) GetError() error {
 	return t.DB.Error
 }
@@ -73,6 +77,7 @@ type DB interface {
 	Create(interface{}) error
 	Save(interface{}) error
 	Delete(interface{}, ...interface{}) error
+	Preload(string, ...interface{}) DB
 	Rollback() DB
 	Begin() DB
 	Commit() DB
