@@ -93,21 +93,25 @@ func TestMergeRepositories(t *testing.T) {
 		{
 			old: []*model.Repository{
 				{
+					ID:   1,
 					Name: "random",
 				},
 			},
 			new: []*model.Repository{
 				{
-					Name: "1",
+					RepositoryID: 2,
+					Name:         "1",
 				},
 			},
 
 			out: []*model.Repository{
 				{
+					ID:   1,
 					Name: "random",
 				},
 				{
-					Name: "1",
+					RepositoryID: 2,
+					Name:         "1",
 				},
 			},
 		},

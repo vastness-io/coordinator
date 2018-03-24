@@ -131,6 +131,23 @@ func (_mr *MockDBMockRecorder) GetError() *gomock.Call {
 	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "GetError", reflect.TypeOf((*MockDB)(nil).GetError))
 }
 
+// Preload mocks base method
+func (_m *MockDB) Preload(_param0 string, _param1 ...interface{}) repository.DB {
+	_s := []interface{}{_param0}
+	for _, _x := range _param1 {
+		_s = append(_s, _x)
+	}
+	ret := _m.ctrl.Call(_m, "Preload", _s...)
+	ret0, _ := ret[0].(repository.DB)
+	return ret0
+}
+
+// Preload indicates an expected call of Preload
+func (_mr *MockDBMockRecorder) Preload(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	_s := append([]interface{}{arg0}, arg1...)
+	return _mr.mock.ctrl.RecordCallWithMethodType(_mr.mock, "Preload", reflect.TypeOf((*MockDB)(nil).Preload), _s...)
+}
+
 // Rollback mocks base method
 func (_m *MockDB) Rollback() repository.DB {
 	ret := _m.ctrl.Call(_m, "Rollback")

@@ -77,7 +77,6 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 
 	}
 
-	s.logger.Info("before update")
 	err = s.repository.Update(tx, current)
 
 	if err != nil {

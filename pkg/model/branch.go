@@ -5,10 +5,11 @@ type BranchMeta struct {
 	Languages []Language `gorm:"many2many:branch_languages"`
 	BranchID  int64
 }
+
 type Branch struct {
-	ID           int64      `gorm:"primary_key"`
-	Meta         BranchMeta `gorm:"foreignkey:BranchID"`
+	ID           int64 `gorm:"primary_key"`
 	Name         string
-	Commits      []*Commit `gorm:"foreignkey:BranchID"`
+	Meta         BranchMeta `gorm:"foreignkey:BranchID"`
+	Commits      []*Commit  `gorm:"many2many:branch_commits"`
 	RepositoryID int64
 }

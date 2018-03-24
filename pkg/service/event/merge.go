@@ -1,7 +1,6 @@
 package event
 
 import (
-	"fmt"
 	"github.com/vastness-io/coordinator/pkg/model"
 )
 
@@ -51,7 +50,7 @@ func MergeBranches(old, new []*model.Branch) []*model.Branch {
 
 func containsBranch(branch *model.Branch, branches []*model.Branch) (bool, int) {
 	for i, _ := range branches {
-		if branches[i].Name == branch.Name {
+		if (branches[i].Name == branch.Name) && (branches[i].RepositoryID == branch.RepositoryID) {
 			return true, i
 		}
 	}

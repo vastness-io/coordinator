@@ -14,5 +14,4 @@ type Commit struct {
 	Added       pq.StringArray
 	Modified    pq.StringArray
 	Removed     pq.StringArray
-	BranchID    int64
 }

@@ -130,7 +130,7 @@ func run() {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
-	log.Info("Starting coordinator")
+	log.Infof("Starting %s", name)
 
 	var (
 		mux      = http.NewServeMux()
@@ -208,7 +208,7 @@ func run() {
 	for {
 		select {
 		case <-signalChan:
-			log.Info("Exiting coordinator")
+			log.Infof("Exiting %s", name)
 			srv.GracefulStop()
 			os.Exit(0)
 		}

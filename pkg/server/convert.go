@@ -37,6 +37,9 @@ func ConvertToProjectModel(from *vcs.VcsPushEvent) *model.Project {
 			outCommit := ConvertEventCommitToCommitModel(commit)
 			branchCommits = append(branchCommits, outCommit)
 		}
+
+		branch.RepositoryID = repo.RepositoryID
+
 		branch.Commits = branchCommits
 
 		repo.Branches = append(repo.Branches, branch)
