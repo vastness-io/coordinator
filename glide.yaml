@@ -23,3 +23,5 @@ import:
 - package: github.com/lib/pq
 - package: github.com/mattes/migrate
   version: ^3.0.1
+- package: github.com/vastness-io/coordinator-svc
+  version: ^0.1.0

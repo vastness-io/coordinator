@@ -1,4 +1,4 @@
-package event
+package vcs_event
 
 import "strings"
 

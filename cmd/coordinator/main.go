@@ -12,9 +12,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	"github.com/vastness-io/coordinator-svc/project"
 	"github.com/vastness-io/coordinator/pkg/repository"
-	"github.com/vastness-io/coordinator/pkg/server"
-	"github.com/vastness-io/coordinator/pkg/service/event"
+	project_server "github.com/vastness-io/coordinator/pkg/server/project"
+	event_server "github.com/vastness-io/coordinator/pkg/server/vcs_event"
+	project_service "github.com/vastness-io/coordinator/pkg/service/project"
+	event_service "github.com/vastness-io/coordinator/pkg/service/vcs_event"
 	"github.com/vastness-io/linguist-svc"
 	toolkit "github.com/vastness-io/toolkit/pkg/grpc"
 	vcswebhook "github.com/vastness-io/vcs-webhook-svc/webhook"
@@ -176,14 +179,18 @@ func run() {
 	}
 
 	var (
-		db                = repository.NewDB(gormDB)
-		projectRepository = repository.NewProjectRepository(db)
-		linguistClient    = linguist.NewLinguistClient(linguistConn)
-		vcsEventService   = event.NewVcsEventService(log, linguistClient, projectRepository)
-		vcsEventServer    = server.NewVcsEventServer(vcsEventService, log)
+		db                       = repository.NewDB(gormDB)
+		projectRepository        = repository.NewProjectRepository(db)
+		linguistClient           = linguist.NewLinguistClient(linguistConn)
+		vcsEventService          = event_service.NewVcsEventService(log.WithField("service", "vcs_event"), linguistClient, projectRepository)
+		projectService           = project_service.NewProjectService(log.WithField("service", "project"), projectRepository)
+		vcsEventServer           = event_server.NewVcsEventServer(vcsEventService, log.WithField("server", "vcs_event"))
+		projectInformationServer = project_server.NewProjectInformationServer(projectService, log.WithField("server", "project"))
 	)
 
 	vcswebhook.RegisterVcsEventServer(srv, vcsEventServer)
+
+	project.RegisterProjectsServer(srv, projectInformationServer)
 
 	grpc_prometheus.Register(srv)
 

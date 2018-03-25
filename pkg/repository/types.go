@@ -1,13 +1,8 @@
 package repository
 
 import (
-	"errors"
 	"github.com/jinzhu/gorm"
 	"github.com/vastness-io/coordinator/pkg/model"
-)
-
-var (
-	PrimaryKeyIsSet = errors.New("primary key has been set manually")
 )
 
 type ProjectRepository interface {

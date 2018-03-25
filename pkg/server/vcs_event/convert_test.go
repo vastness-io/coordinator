@@ -1,4 +1,4 @@
-package server
+package vcs_event
 
 import (
 	"github.com/vastness-io/coordinator/pkg/model"

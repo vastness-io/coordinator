@@ -1,4 +1,4 @@
-package server
+package vcs_event
 
 import (
 	"context"
