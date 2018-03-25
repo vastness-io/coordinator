@@ -44,7 +44,7 @@ func (r *projectRepository) GetProject(tx DB, name string, vcsType string) (*mod
 func (r *projectRepository) GetProjects(tx DB) ([]*model.Project, error) {
 	var out []*model.Project
 
-	err := tx.Find(out)
+	err := tx.Find(&out)
 
 	if err != nil {
 
