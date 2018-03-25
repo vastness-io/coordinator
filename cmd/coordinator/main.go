@@ -2,38 +2,55 @@ package main
 
 import (
 	"fmt"
+	"github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/mattes/migrate"
+	"github.com/mattes/migrate/database/postgres"
+	_ "github.com/mattes/migrate/source/file"
 	"github.com/opentracing/opentracing-go"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	"github.com/vastness-io/coordinator/pkg/server"
-	"github.com/vastness-io/coordinator/pkg/service/webhook"
+	"github.com/vastness-io/coordinator-svc/project"
+	"github.com/vastness-io/coordinator/pkg/repository"
+	project_server "github.com/vastness-io/coordinator/pkg/server/project"
+	event_server "github.com/vastness-io/coordinator/pkg/server/vcs_event"
+	project_service "github.com/vastness-io/coordinator/pkg/service/project"
+	event_service "github.com/vastness-io/coordinator/pkg/service/vcs_event"
 	"github.com/vastness-io/linguist-svc"
 	toolkit "github.com/vastness-io/toolkit/pkg/grpc"
-	"github.com/vastness-io/vcs-webhook-svc/webhook/github"
+	vcswebhook "github.com/vastness-io/vcs-webhook-svc/webhook"
 	"google.golang.org/grpc"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
-	"github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"net/http"
 )
 
 const (
-	name        = "coordinator"
-	description = "Ensures components work together."
+	name             = "coordinator"
+	description      = "Ensures components work together."
+	supportedDb      = "postgres"
+	dbName           = "postgres"
+	connectionString = "host=%s port=%v user=%s dbname=%s password=%s sslmode=disable"
 )
 
 var (
-	log         = logrus.WithField("component", "coordinator")
-	commit      string
-	version     string
-	addr        string
-	port        int
-	linguistSrv string
-	debugMode   bool
+	log                   = logrus.WithField("component", name)
+	commit                string
+	version               string
+	addr                  string
+	port                  int
+	databaseHost          string
+	databasePort          int
+	databaseUser          string
+	databasePass          string
+	migrationFileLocation string
+	linguistSrv           string
+	debugMode             bool
 )
 
 func init() {
@@ -51,18 +68,54 @@ func main() {
 			Usage:       "TCP address to listen on",
 			Value:       "127.0.0.1",
 			Destination: &addr,
+			EnvVar:      "COORDINATOR_ADDRESS",
 		},
 		cli.IntFlag{
 			Name:        "port,p",
 			Usage:       "Port to listen on",
 			Value:       8080,
 			Destination: &port,
+			EnvVar:      "COORDINATOR_PORT",
+		},
+		cli.StringFlag{
+			Name:        "database-host, db-host",
+			Usage:       "Database connection host",
+			Value:       "127.0.0.1",
+			Destination: &databaseHost,
+			EnvVar:      "DATABASE_HOST",
+		},
+		cli.IntFlag{
+			Name:        "database-port, db-port",
+			Usage:       "Database connection port",
+			Value:       5432,
+			Destination: &databasePort,
+			EnvVar:      "DATABASE_PORT",
+		},
+		cli.StringFlag{
+			Name:        "database-user, db-user",
+			Usage:       "Database connection user",
+			Destination: &databaseUser,
+			EnvVar:      "DATABASE_USER",
+		},
+		cli.StringFlag{
+			Name:        "database-pass, db-pass",
+			Usage:       "Database connection password",
+			Destination: &databasePass,
+			EnvVar:      "DATABASE_PASS",
+		},
+		cli.StringFlag{
+			Name:        "migration-file-location, migrate",
+			Usage:       "Location of Database migration files",
+			Value:       "/migration",
+			Destination: &migrationFileLocation,
+			EnvVar:      "MIGRATION_FILE_LOCATION",
 		},
 		cli.StringFlag{
 			Name:        "linguist,s",
 			Usage:       "Linguist Service address.",
 			Value:       "127.0.0.1:8082",
 			Destination: &linguistSrv,
+			EnvVar:      "LINGUIST_ADDRESS",
 		},
 		cli.BoolFlag{
 			Name:        "debug,d",
@@ -80,7 +133,7 @@ func run() {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
 
-	log.Info("Starting coordinator")
+	log.Infof("Starting %s", name)
 
 	var (
 		mux      = http.NewServeMux()
@@ -94,13 +147,6 @@ func run() {
 		log.Fatal(err)
 	}
 
-	go func() {
-		log.Infof("GRPC server listening on %s", address)
-		if err := srv.Serve(lis); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
 	linguistConn, err := toolkit.NewGRPCClient(tracer, log, grpc.WithInsecure())(linguistSrv)
 
 	if err != nil {
@@ -109,17 +155,53 @@ func run() {
 
 	defer linguistConn.Close()
 
+	gormDB, err := gorm.Open(supportedDb, fmt.Sprintf(connectionString, databaseHost, databasePort, databaseUser, dbName, databasePass))
+	defer gormDB.Close()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	driver, err := postgres.WithInstance(gormDB.DB(), &postgres.Config{})
+
+	log.Infof("Running migrations from %s", migrationFileLocation)
+
+	m, err := migrate.NewWithDatabaseInstance(
+		fmt.Sprintf("file://%s", migrationFileLocation),
+		dbName, driver)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatal(err)
+	}
+
 	var (
-		linguistClient       = linguist.NewLinguistClient(linguistConn)
-		githubWebhookService = webhook.NewGithubWebhookService(log, linguistClient)
-		githubWebhookServer  = server.NewGithubWebhookServer(githubWebhookService, log)
+		db                       = repository.NewDB(gormDB)
+		projectRepository        = repository.NewProjectRepository(db)
+		linguistClient           = linguist.NewLinguistClient(linguistConn)
+		vcsEventService          = event_service.NewVcsEventService(log.WithField("service", "vcs_event"), linguistClient, projectRepository)
+		projectService           = project_service.NewProjectService(log.WithField("service", "project"), projectRepository)
+		vcsEventServer           = event_server.NewVcsEventServer(vcsEventService, log.WithField("server", "vcs_event"))
+		projectInformationServer = project_server.NewProjectInformationServer(projectService, log.WithField("server", "project"))
 	)
 
-	github.RegisterGithubWebhookServer(srv, githubWebhookServer)
+	vcswebhook.RegisterVcsEventServer(srv, vcsEventServer)
+
+	project.RegisterProjectsServer(srv, projectInformationServer)
 
 	grpc_prometheus.Register(srv)
 
 	mux.Handle("/metrics", promhttp.Handler())
+
+	go func() {
+		log.Infof("GRPC server listening on %s", address)
+		if err := srv.Serve(lis); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	go func() {
 		log.Infof("HTTP server listening on %s", address)
@@ -133,7 +215,7 @@ func run() {
 	for {
 		select {
 		case <-signalChan:
-			log.Info("Exiting coordinator")
+			log.Infof("Exiting %s", name)
 			srv.GracefulStop()
 			os.Exit(0)
 		}
