@@ -2,14 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/mattes/migrate"
 	"github.com/mattes/migrate/database/postgres"
 	_ "github.com/mattes/migrate/source/file"
 	"github.com/opentracing/opentracing-go"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/vastness-io/coordinator-svc/project"
@@ -23,7 +21,6 @@ import (
 	vcswebhook "github.com/vastness-io/vcs-webhook-svc/webhook"
 	"google.golang.org/grpc"
 	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -136,7 +133,6 @@ func run() {
 	log.Infof("Starting %s", name)
 
 	var (
-		mux      = http.NewServeMux()
 		address  = net.JoinHostPort(addr, strconv.Itoa(port))
 		tracer   = opentracing.GlobalTracer()
 		lis, err = net.Listen("tcp", address)
@@ -192,20 +188,11 @@ func run() {
 
 	project.RegisterProjectsServer(srv, projectInformationServer)
 
-	grpc_prometheus.Register(srv)
-
-	mux.Handle("/metrics", promhttp.Handler())
-
 	go func() {
 		log.Infof("GRPC server listening on %s", address)
 		if err := srv.Serve(lis); err != nil {
 			log.Fatal(err)
 		}
-	}()
-
-	go func() {
-		log.Infof("HTTP server listening on %s", address)
-		http.Serve(lis, mux)
 	}()
 
 	signalChan := make(chan os.Signal, 1)

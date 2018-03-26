@@ -56,20 +56,20 @@ func FromBranchModel(in *model.Branch) (out *project.Branch) {
 func FromBranchMetaModel(in model.BranchMeta) (out *project.BranchMeta) {
 	out = &project.BranchMeta{}
 
-	langs := make([]*project.Language, 0, cap(in.Languages))
+	langs := make([]*project.Language, 0, len(in.GetLanguages()))
 
-	for _, lang := range in.Languages {
-		langs = append(langs, FromLanguageModel(lang))
+	for name, percentage := range in.GetLanguages() {
+		langs = append(langs, createLanguage(name, percentage))
 	}
 
 	out.Languages = langs
 	return
 }
 
-func FromLanguageModel(in model.Language) (out *project.Language) {
+func createLanguage(name string, percentage float64) (out *project.Language) {
 	out = &project.Language{
-		Name:       in.Name,
-		Percentage: in.Percentage,
+		Name:       name,
+		Percentage: percentage,
 	}
 	return
 }

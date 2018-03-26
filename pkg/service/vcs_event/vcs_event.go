@@ -72,7 +72,7 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 
 			req.FileNames = files
 
-			branch.Meta.Languages = convertLangResponse(s.GetLanguagesUsedInRepository(&req))
+			branch.Meta.SetLanguages(ConvertToBranchLanguages(s.GetLanguagesUsedInRepository(&req)))
 		}
 
 	}
@@ -104,14 +104,13 @@ func (s *vcsEventService) GetLanguagesUsedInRepository(req *linguist.LanguageReq
 
 }
 
-func convertLangResponse(res []*linguist.Language) []model.Language {
-	var out []model.Language
 
-	for _, lang := range res {
-		out = append(out, model.Language{
-			Percentage: lang.GetPercentage(),
-			Name:       lang.GetName(),
-		})
+func ConvertToBranchLanguages(langs []*linguist.Language) model.BranchLanguages {
+	out := make(model.BranchLanguages)
+
+	for _, lang := range langs {
+		out[lang.GetName()] = lang.GetPercentage()
 	}
+
 	return out
 }

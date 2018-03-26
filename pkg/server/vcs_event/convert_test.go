@@ -194,6 +194,7 @@ func TestConvertToProjectModel(t *testing.T) {
 						Branches: []*model.Branch{
 							{
 								Name: "branch",
+								Meta: make(model.BranchMeta),
 								Commits: []*model.Commit{
 									{
 										Sha:         "hash",
