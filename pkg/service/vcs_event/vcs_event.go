@@ -104,7 +104,6 @@ func (s *vcsEventService) GetLanguagesUsedInRepository(req *linguist.LanguageReq
 
 }
 
-
 func ConvertToBranchLanguages(langs []*linguist.Language) model.BranchLanguages {
 	out := make(model.BranchLanguages)
 

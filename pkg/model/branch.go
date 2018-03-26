@@ -11,38 +11,39 @@ const (
 )
 
 var (
-	TypeAssertByteErr = errors.New("unable to type assert to map[string] interface{}")
+	TypeAssertByteErr               = errors.New("unable to type assert to map[string] interface{}")
 	TypeAssertMapStringInterfaceErr = errors.New("unable to type assert to map[string] interface{}")
 )
-type BranchLanguages map[string] float64
 
-type BranchMeta map[string] interface{}
+type BranchLanguages map[string]float64
+
+type BranchMeta map[string]interface{}
 
 func (b BranchMeta) SetLanguages(branchLanguages BranchLanguages) {
 	b[languageMetaKey] = branchLanguages
 }
 
 func (b BranchMeta) GetLanguages() BranchLanguages {
-	m, ok := b[languageMetaKey].(map[string] interface{})
+	m, ok := b[languageMetaKey].(map[string]interface{})
 
 	if !ok {
 		return nil
+	}
+
+	out := make(BranchLanguages)
+
+	for k, v := range m {
+
+		fv, ok := v.(float64)
+
+		if !ok {
+			continue
 		}
 
-		out := make(BranchLanguages)
+		out[k] = fv
+	}
 
-		for k, v := range m {
-
-			fv, ok := v.(float64)
-
-			if !ok {
-				continue
-			}
-
-			out[k] = fv
-		}
-
-		return out
+	return out
 }
 
 func (b BranchMeta) Value() (driver.Value, error) {
@@ -74,6 +75,6 @@ type Branch struct {
 	ID           int64 `gorm:"primary_key"`
 	Name         string
 	Meta         BranchMeta
-	Commits      []*Commit  `gorm:"many2many:branch_commits"`
+	Commits      []*Commit `gorm:"many2many:branch_commits"`
 	RepositoryID int64
 }
