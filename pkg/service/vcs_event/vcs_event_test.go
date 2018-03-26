@@ -95,7 +95,7 @@ func TestUpdateProject(t *testing.T) {
 	}{
 		{
 			inProject: &model.Project{
-				Name: "example",
+				Name: "1",
 				Type: "GITHUB",
 			},
 			outProject: nil,
@@ -144,7 +144,7 @@ func TestUpdateProject(t *testing.T) {
 			},
 			err: nil,
 			inProject: &model.Project{
-				Name: "example",
+				Name: "2",
 				Type: "GITHUB",
 				Repositories: []*model.Repository{
 					{
@@ -152,6 +152,7 @@ func TestUpdateProject(t *testing.T) {
 						Branches: []*model.Branch{
 							{
 								Name: "branch_1",
+								Meta: make(model.BranchMeta),
 								Commits: []*model.Commit{
 									{
 										Added: []string{
@@ -167,8 +168,9 @@ func TestUpdateProject(t *testing.T) {
 					},
 				},
 			},
+
 			outProject: &model.Project{
-				Name: "example",
+				Name: "2",
 				Type: "GITHUB",
 				Repositories: []*model.Repository{
 					{
@@ -176,6 +178,9 @@ func TestUpdateProject(t *testing.T) {
 						Branches: []*model.Branch{
 							{
 								Name: "branch_1",
+								Meta: map[string]interface{}{
+									"languages": make(model.BranchLanguages),
+								},
 								Commits: []*model.Commit{
 									{
 										Added: []string{
@@ -211,7 +216,7 @@ func TestUpdateProject(t *testing.T) {
 			err: stdlib.New("unexpected error to cause rollback"),
 
 			inProject: &model.Project{
-				Name: "example",
+				Name: "3",
 				Type: "GITHUB",
 			},
 			outProject: nil,

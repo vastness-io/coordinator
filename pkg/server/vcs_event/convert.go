@@ -40,6 +40,8 @@ func ConvertToProjectModel(from *vcs.VcsPushEvent) *model.Project {
 
 		branch.RepositoryID = repo.RepositoryID
 
+		branch.Meta = make(model.BranchMeta)
+
 		branch.Commits = branchCommits
 
 		repo.Branches = append(repo.Branches, branch)

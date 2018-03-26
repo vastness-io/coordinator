@@ -27,7 +27,7 @@ func (r *projectRepository) Create(tx DB, project *model.Project) error {
 func (r *projectRepository) GetProject(tx DB, name string, vcsType string) (*model.Project, error) {
 	var out model.Project
 
-	err := tx.Preload("Repositories.Branches.Meta.Languages").Preload("Repositories.Branches.Commits").First(&out, "name = ? AND type = ?", name, vcsType)
+	err := tx.Preload("Repositories.Branches").Preload("Repositories.Branches.Commits").First(&out, "name = ? AND type = ?", name, vcsType)
 
 	if err != nil {
 
@@ -44,7 +44,7 @@ func (r *projectRepository) GetProject(tx DB, name string, vcsType string) (*mod
 func (r *projectRepository) GetProjects(tx DB) ([]*model.Project, error) {
 	var out []*model.Project
 
-	err := tx.Preload("Repositories.Branches.Meta.Languages").Preload("Repositories.Branches.Commits").Find(&out)
+	err := tx.Preload("Repositories.Branches").Preload("Repositories.Branches.Commits").Find(&out)
 
 	if err != nil {
 
