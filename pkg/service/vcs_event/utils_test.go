@@ -1,7 +1,39 @@
 package vcs_event
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
+func TestExcludeRemovedFilesFromLangRequest(t *testing.T) {
+	tests := []struct {
+		in          []string
+		toBeRemoved string
+		expected    []string
+	}{
+		{
+			in: []string{
+				"main.clj",
+				"a.py",
+				"pom.xml",
+			},
+			toBeRemoved: "pom.xml",
+			expected: []string{
+				"main.clj",
+				"a.py",
+			},
+		},
+	}
+
+	for _, test := range tests {
+
+		result := RemoveDuplicates(test.in, test.toBeRemoved)
+		if !reflect.DeepEqual(result, test.expected) {
+			t.Fatalf("Expected %v, got %v", test.expected, result)
+		}
+	}
+
+}
 func TestRemoveDirectoryPrefix(t *testing.T) {
 	tests := []struct {
 		in  string
