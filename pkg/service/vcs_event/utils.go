@@ -1,6 +1,8 @@
 package vcs_event
 
-import "strings"
+import (
+	"strings"
+)
 
 func RemoveDirectoryPrefix(s string) string {
 
@@ -12,4 +14,25 @@ func RemoveDirectoryPrefix(s string) string {
 	}
 
 	return s
+}
+
+func RemoveDuplicates(files []string, f string) []string {
+	ok, index := containsFile(f, files)
+
+	if ok {
+		files = append(files[:index], files[index+1:]...)
+	} else {
+		files = append(files, f)
+	}
+
+	return files
+}
+
+func containsFile(f string, files []string) (bool, int) {
+	for i, _ := range files {
+		if files[i] == f {
+			return true, i
+		}
+	}
+	return false, -1
 }

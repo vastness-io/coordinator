@@ -61,13 +61,16 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 			for _, commit := range branch.Commits {
 
 				for _, add := range commit.Added {
-					files = append(files, RemoveDirectoryPrefix(add))
+					files = RemoveDuplicates(files, RemoveDirectoryPrefix(add))
 				}
 
 				for _, mod := range commit.Modified {
-					files = append(files, RemoveDirectoryPrefix(mod))
+					files = RemoveDuplicates(files, RemoveDirectoryPrefix(mod))
 				}
-				//TODO handle removed files
+
+				for _, rem := range commit.Removed {
+					files = RemoveDuplicates(files, RemoveDirectoryPrefix(rem))
+				}
 			}
 
 			req.FileNames = files
