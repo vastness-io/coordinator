@@ -23,31 +23,33 @@ func ConvertToProjectModel(from *vcs.VcsPushEvent) *model.Project {
 		}
 	)
 
-	if fromOrg != nil {
-		out.Name = fromOrg.GetName()
-	}
+	out.Name = fromOrg.GetName()
 
 	out.Type = from.GetVcsType().String()
 
-	if fromRepository != nil {
-		repo := ConvertEventRepositoryToRepositoryModel(fromRepository)
-		var branchCommits []*model.Commit
+	repo := ConvertEventRepositoryToRepositoryModel(fromRepository)
+	repo.RepositoryType = from.GetVcsType().String()
+	repo.RepositoryOwner = fromOrg.GetName()
+	var branchCommits []*model.Commit
 
-		for _, commit := range fromCommits {
-			outCommit := ConvertEventCommitToCommitModel(commit)
-			branchCommits = append(branchCommits, outCommit)
-		}
-
-		branch.RepositoryID = repo.RepositoryID
-
-		branch.Meta = make(model.BranchMeta)
-
-		branch.Commits = branchCommits
-
-		repo.Branches = append(repo.Branches, branch)
-
-		out.Repositories = append(out.Repositories, repo)
+	for _, commit := range fromCommits {
+		outCommit := ConvertEventCommitToCommitModel(commit)
+		branchCommits = append(branchCommits, outCommit)
 	}
+
+	branch.RepositoryOwner = repo.RepositoryOwner
+
+	branch.RepositoryName = repo.RepositoryName
+
+	branch.RepositoryType = repo.RepositoryType
+
+	branch.Meta = make(model.BranchMeta)
+
+	branch.Commits = branchCommits
+
+	repo.Branches = append(repo.Branches, branch)
+
+	out.Repositories = append(out.Repositories, repo)
 
 	return &out
 
@@ -55,8 +57,7 @@ func ConvertToProjectModel(from *vcs.VcsPushEvent) *model.Project {
 
 func ConvertEventRepositoryToRepositoryModel(from *vcs.Repository) *model.Repository {
 	return &model.Repository{
-		RepositoryID: from.GetId(),
-		Name:         from.GetName(),
+		RepositoryName: from.GetName(),
 	}
 }
 
