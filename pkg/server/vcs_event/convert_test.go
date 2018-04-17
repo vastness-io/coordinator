@@ -50,7 +50,7 @@ func TestConvertEventRepositoryToRepositoryModel(t *testing.T) {
 				Name: "name",
 			},
 			out: &model.Repository{
-				Name: "name",
+				RepositoryName: "name",
 			},
 		},
 	}
@@ -190,11 +190,16 @@ func TestConvertToProjectModel(t *testing.T) {
 				Type: "GITHUB",
 				Repositories: []*model.Repository{
 					{
-						Name: "repo_1",
+						RepositoryName:  "repo_1",
+						RepositoryOwner: "project_1",
+						RepositoryType:  "GITHUB",
 						Branches: []*model.Branch{
 							{
-								Name: "branch",
-								Meta: make(model.BranchMeta),
+								Name:            "branch",
+								RepositoryName:  "repo_1",
+								RepositoryOwner: "project_1",
+								RepositoryType:  "GITHUB",
+								Meta:            make(model.BranchMeta),
 								Commits: []*model.Commit{
 									{
 										Sha:         "hash",

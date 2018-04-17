@@ -65,15 +65,22 @@ func TestMergeRepositories(t *testing.T) {
 		{
 			old: []*model.Repository{
 				{
-					Name: "1",
+					Name:  "1",
+					Owner: "project_1",
+					Type:  "GITHUB",
 				},
 			},
 			new: []*model.Repository{
 				{
-					Name: "1",
+					RepositoryName:  "1",
+					RepositoryOwner: "project_1",
+					RepositoryType:  "GITHUB",
 					Branches: []*model.Branch{
 						{
-							Name: "1",
+							Name:            "1",
+							RepositoryName:  "1",
+							RepositoryOwner: "project_1",
+							RepositoryType:  "GITHUB",
 						},
 					},
 				},
@@ -81,10 +88,15 @@ func TestMergeRepositories(t *testing.T) {
 
 			out: []*model.Repository{
 				{
-					Name: "1",
+					Name:  "1",
+					Owner: "project_1",
+					Type:  "GITHUB",
 					Branches: []*model.Branch{
 						{
-							Name: "1",
+							Name:            "1",
+							RepositoryName:  "1",
+							RepositoryOwner: "project_1",
+							RepositoryType:  "GITHUB",
 						},
 					},
 				},
@@ -93,25 +105,29 @@ func TestMergeRepositories(t *testing.T) {
 		{
 			old: []*model.Repository{
 				{
-					ID:   1,
-					Name: "random",
+					Name:  "1",
+					Owner: "project_1",
+					Type:  "GITHUB",
 				},
 			},
 			new: []*model.Repository{
 				{
-					RepositoryID: 2,
-					Name:         "1",
+					RepositoryName:  "2",
+					RepositoryOwner: "project_1",
+					RepositoryType:  "GITHUB",
 				},
 			},
 
 			out: []*model.Repository{
 				{
-					ID:   1,
-					Name: "random",
+					Name:  "1",
+					Owner: "project_1",
+					Type:  "GITHUB",
 				},
 				{
-					RepositoryID: 2,
-					Name:         "1",
+					RepositoryName:  "2",
+					RepositoryOwner: "project_1",
+					RepositoryType:  "GITHUB",
 				},
 			},
 		},

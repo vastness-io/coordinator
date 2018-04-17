@@ -23,8 +23,9 @@ func FromProjectModel(in *model.Project) (out *project.Project) {
 
 func FromRepositoryModel(in *model.Repository) (out *project.Repository) {
 	out = &project.Repository{
-		Id:   in.ID,
-		Name: in.Name,
+		Name:  in.Name,
+		Owner: in.Owner,
+		Type:  in.Type,
 	}
 
 	branches := make([]*project.Branch, 0, cap(in.Branches))

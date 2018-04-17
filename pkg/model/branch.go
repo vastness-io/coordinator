@@ -72,9 +72,11 @@ func (b *BranchMeta) Scan(src interface{}) error {
 }
 
 type Branch struct {
-	ID           int64 `gorm:"primary_key"`
-	Name         string
-	Meta         BranchMeta
-	Commits      []*Commit `gorm:"many2many:branch_commits"`
-	RepositoryID int64
+	ID              int64 `gorm:"primary_key"`
+	Name            string
+	Meta            BranchMeta
+	Commits         []*Commit `gorm:"many2many:branch_commits"`
+	RepositoryName  string
+	RepositoryOwner string
+	RepositoryType  string
 }
