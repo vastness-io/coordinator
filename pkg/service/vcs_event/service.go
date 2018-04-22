@@ -7,5 +7,5 @@ import (
 
 type Service interface {
 	UpdateProject(project *model.Project) (*model.Project, error)
-	GetLanguagesUsedInRepository(*linguist.LanguageRequest) []*linguist.Language
+	GetLanguagesUsedInBranch(*linguist.LanguageRequest) []*linguist.Language
 }
