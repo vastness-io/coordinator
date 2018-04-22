@@ -11,7 +11,7 @@ func FromProjectModel(in *model.Project) (out *project.Project) {
 		Type: in.Type,
 	}
 
-	repos := make([]*project.Repository, 0, cap(in.Repositories))
+	repos := make([]*project.Repository, 0, len(in.Repositories))
 
 	for _, repo := range in.Repositories {
 		repos = append(repos, FromRepositoryModel(repo))
@@ -28,7 +28,7 @@ func FromRepositoryModel(in *model.Repository) (out *project.Repository) {
 		Type:  in.Type,
 	}
 
-	branches := make([]*project.Branch, 0, cap(in.Branches))
+	branches := make([]*project.Branch, 0, len(in.Branches))
 
 	for _, branch := range in.Branches {
 		branches = append(branches, FromBranchModel(branch))
@@ -44,7 +44,7 @@ func FromBranchModel(in *model.Branch) (out *project.Branch) {
 		Meta: FromBranchMetaModel(in.Meta),
 	}
 
-	commits := make([]*project.Commit, 0, cap(in.Commits))
+	commits := make([]*project.Commit, 0, len(in.Commits))
 
 	for _, commit := range in.Commits {
 		commits = append(commits, FromCommitModel(commit))

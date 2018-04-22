@@ -13,7 +13,7 @@ import (
 
 type NOOPService struct{}
 
-func (n *NOOPService) GetLanguagesUsedInRepository(_ *linguist.LanguageRequest) []*linguist.Language {
+func (n *NOOPService) GetLanguagesUsedInBranch(_ *linguist.LanguageRequest) []*linguist.Language {
 	var result []*linguist.Language
 	return result
 }

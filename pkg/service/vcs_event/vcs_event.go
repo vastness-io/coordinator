@@ -6,8 +6,8 @@ import (
 	"github.com/vastness-io/coordinator/pkg/errors"
 	"github.com/vastness-io/coordinator/pkg/model"
 	"github.com/vastness-io/coordinator/pkg/repository"
+	"github.com/vastness-io/coordinator/pkg/shared"
 	"github.com/vastness-io/linguist-svc"
-	"time"
 )
 
 type vcsEventService struct {
@@ -83,7 +83,10 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 
 			req.FileNames = files
 
-			branch.Meta.SetLanguages(ConvertToBranchLanguages(s.GetLanguagesUsedInRepository(&req)))
+			if languages := s.GetLanguagesUsedInBranch(&req); len(languages) != 0 {
+				branch.Meta.SetLanguages(ConvertToBranchLanguages(languages))
+			}
+
 		}
 
 	}
@@ -99,15 +102,15 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 
 }
 
-func (s *vcsEventService) GetLanguagesUsedInRepository(req *linguist.LanguageRequest) []*linguist.Language {
+func (s *vcsEventService) GetLanguagesUsedInBranch(req *linguist.LanguageRequest) []*linguist.Language {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second) // Don't think this is the right way to do it?
+	ctx, cancel := context.WithTimeout(context.Background(), shared.LanguageReqTimeout) // Don't think this is the right way to do it?
 	defer cancel()
 
 	res, err := s.linguist.GetLanguages(ctx, req)
 
 	if err != nil {
-		s.logger.Error("Unable to detect Language(s) for repository")
+		s.logger.Error("Unable to detect Language(s) for branch")
 		return make([]*linguist.Language, 0)
 	}
 

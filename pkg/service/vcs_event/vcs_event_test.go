@@ -62,7 +62,7 @@ func TestGetLanguagesUsedInRepository(t *testing.T) {
 
 			mockClient.EXPECT().GetLanguages(gomock.Any(), langReq).Return(langRes, test.err)
 
-			languages := eventSvc.GetLanguagesUsedInRepository(langReq)
+			languages := eventSvc.GetLanguagesUsedInBranch(langReq)
 
 			if len(languages) != len(test.expectedDetectedLangs) {
 				t.Fatal("Should equal")
@@ -178,9 +178,7 @@ func TestUpdateProject(t *testing.T) {
 						Branches: []*model.Branch{
 							{
 								Name: "branch_1",
-								Meta: map[string]interface{}{
-									"languages": make(model.BranchLanguages),
-								},
+								Meta: map[string]interface{}{},
 								Commits: []*model.Commit{
 									{
 										Added: []string{
