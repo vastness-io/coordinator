@@ -4,35 +4,21 @@ import (
 	"strings"
 )
 
-func RemoveDirectoryPrefix(s string) string {
+func RemoveDirectoryPrefix(files []string) []string {
 
-	index := strings.LastIndex(s, "/")
+	var out []string
 
-	if index != -1 {
-		r := []rune(s)
-		return string(r[index+1:])
-	}
+	for _, s := range files {
+		index := strings.LastIndex(s, "/")
 
-	return s
-}
-
-func RemoveDuplicates(files []string, f string) []string {
-	ok, index := containsFile(f, files)
-
-	if ok {
-		files = append(files[:index], files[index+1:]...)
-	} else {
-		files = append(files, f)
-	}
-
-	return files
-}
-
-func containsFile(f string, files []string) (bool, int) {
-	for i, _ := range files {
-		if files[i] == f {
-			return true, i
+		if index != -1 {
+			r := []rune(s)
+			out = append(out, string(r[index+1:]))
+			continue
 		}
+
+		out = append(out, s)
 	}
-	return false, -1
+
+	return out
 }

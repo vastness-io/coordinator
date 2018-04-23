@@ -11,6 +11,7 @@ import (
 	"github.com/vastness-io/linguist-svc/mock/linguist"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestGetLanguagesUsedInRepository(t *testing.T) {
@@ -87,6 +88,10 @@ func TestGetLanguagesUsedInRepository(t *testing.T) {
 
 func TestUpdateProject(t *testing.T) {
 
+	var (
+		timestamp    = time.Time{}
+		timestampPtr = &timestamp
+	)
 	tests := []struct {
 		inProject  *model.Project
 		outProject *model.Project
@@ -155,6 +160,7 @@ func TestUpdateProject(t *testing.T) {
 								Meta: make(model.BranchMeta),
 								Commits: []*model.Commit{
 									{
+										Timestamp: timestampPtr,
 										Added: []string{
 											"main.go",
 										},
@@ -181,6 +187,7 @@ func TestUpdateProject(t *testing.T) {
 								Meta: map[string]interface{}{},
 								Commits: []*model.Commit{
 									{
+										Timestamp: timestampPtr,
 										Added: []string{
 											"main.go",
 										},
