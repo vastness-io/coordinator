@@ -1,12 +1,12 @@
 hash: fc1179c53b32c5a4208d69af93b6538f6db6947fcbc9afa16ea1a7d8e0831c1f
-updated: 2018-04-17T15:54:38.987841+02:00
+updated: 2018-04-25T10:35:47.344621+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 3a771d992973f24aa725d07868b467d1ddfceafb
   subpackages:
   - quantile
 - name: github.com/golang/mock
-  version: 13f360950a79f5864a972c786a10a50e44b69541
+  version: c34cdb4725f4c3844d095133c6e40e448b86589b
   subpackages:
   - gomock
 - name: github.com/golang/protobuf
@@ -68,7 +68,7 @@ imports:
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: d0f7cd64bda49e08b22ae8a730aa57aa0db125d6
+  version: e5b036cc37a466a0af27d604d1ee500211d16d6a
   subpackages:
   - expfmt
   - internal/bitbucket.org/ww/goautoneg
@@ -85,14 +85,12 @@ imports:
   version: cfb38830724cc34fedffe9a2a29fb54fa9169cd1
 - name: github.com/vastness-io/coordinator-svc
   version: 9f8c39477c6990750ff77977b6cda974b3156279
-  subpackages:
-  - project
 - name: github.com/vastness-io/linguist-svc
   version: 24e7369ec1a84ba35f420e00f7d2f734dee66c35
   subpackages:
   - mock/linguist
 - name: github.com/vastness-io/toolkit
-  version: a25d6ce09da43b9852062215b7cabbfeb35169bb
+  version: ddfe7c027727cb412b3d4e7a1392bd820737bce5
   subpackages:
   - pkg/grpc
 - name: github.com/vastness-io/vcs-webhook-svc
@@ -100,11 +98,11 @@ imports:
   subpackages:
   - webhook
 - name: golang.org/x/crypto
-  version: d6449816ce06963d9d136eee5a56fca5b0616e7e
+  version: b0697eccbea9adec5b7ba8008f4c33d98d733388
   subpackages:
   - ssh/terminal
 - name: golang.org/x/net
-  version: 8d16fa6dc9a85c1cd3ed24ad08ff21cf94f10888
+  version: 5f9ae10d9af5b1c89ae6904293b14b064d4ada23
   subpackages:
   - context
   - http/httpguts
@@ -115,7 +113,7 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/sys
-  version: b126b21c05a91c856b027c16779c12e3bf236954
+  version: 79b0c6888797020a994db17c8510466c72fe75d9
   subpackages:
   - unix
   - windows
