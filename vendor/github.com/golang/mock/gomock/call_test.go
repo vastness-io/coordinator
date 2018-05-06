@@ -1,8 +1,6 @@
 package gomock
 
-import (
-	"testing"
-)
+import "testing"
 
 type mockTestReporter struct {
 	errorCalls int
@@ -16,8 +14,6 @@ func (o *mockTestReporter) Errorf(format string, args ...interface{}) {
 func (o *mockTestReporter) Fatalf(format string, args ...interface{}) {
 	o.fatalCalls++
 }
-
-func (o *mockTestReporter) Helper() {}
 
 func TestCall_After(t *testing.T) {
 	t.Run("SelfPrereqCallsFatalf", func(t *testing.T) {

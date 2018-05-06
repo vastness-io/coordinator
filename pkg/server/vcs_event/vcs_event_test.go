@@ -8,6 +8,7 @@ import (
 	"github.com/vastness-io/coordinator/pkg/model"
 	"github.com/vastness-io/linguist-svc"
 	"github.com/vastness-io/vcs-webhook-svc/webhook"
+	"reflect"
 	"testing"
 )
 
@@ -43,10 +44,14 @@ func TestOnPush(t *testing.T) {
 	for _, test := range tests {
 		result, err := srv.OnPush(test.ctx, test.req)
 
+		if err != nil {
+			t.Fail()
+		}
+
 		expected := new(empty.Empty)
 
-		if result != expected || err != nil {
-			t.Fatalf("expected pointer of empty, got: %s", expected)
+		if !reflect.DeepEqual(result, expected) {
+			t.Fatalf("expected pointer of empty, got: %s", result)
 		}
 	}
 
