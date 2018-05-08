@@ -23,3 +23,13 @@ up: build
 generate:
 	@echo "=> generating mocks"
 	./hack/generate-mocks.sh
+
+container: build
+	docker build -t quay.io/vastness.io/coordinator:${COMMIT} .
+
+push: container
+	docker push quay.io/vastness.io/coordinator:${COMMIT}
+	docker tag quay.io/vastness.io/coordinator:${COMMIT} quay.io/vastness.io/coordinator:${VERSION}
+	docker push quay.io/vastness.io/coordinator:${VERSION}
+	docker tag quay.io/vastness.io/coordinator:${COMMIT} quay.io/vastness.io/coordinator:latest
+	docker push quay.io/vastness.io/coordinator:latest
