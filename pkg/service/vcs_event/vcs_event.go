@@ -8,6 +8,7 @@ import (
 	"github.com/vastness-io/coordinator/pkg/repository"
 	"github.com/vastness-io/coordinator/pkg/shared"
 	"github.com/vastness-io/linguist-svc"
+	"time"
 )
 
 type vcsEventService struct {
@@ -57,31 +58,70 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 		for _, branch := range repo.Branches {
 			req := linguist.LanguageRequest{}
 
-			var files []string
+			type timeDiff struct {
+				removed bool
+				t       time.Time
+			}
+
+			fileStatus := make(map[string]*timeDiff)
+
 			for _, commit := range branch.Commits {
 
-				for _, add := range commit.Added {
-					ok, _ := containsFile(RemoveDirectoryPrefix(add), files)
+				timestamp := *commit.Timestamp
 
-					if !ok {
-						files = append(files, RemoveDirectoryPrefix(add))
+				for _, add := range commit.Added {
+
+					v, ok := fileStatus[add]
+
+					if ok {
+						if timestamp.After(v.t) {
+							v.removed = false
+							v.t = timestamp
+						}
+					} else {
+						fileStatus[add] = &timeDiff{
+							t: timestamp,
+						}
 					}
+
 				}
 
 				for _, mod := range commit.Modified {
-					ok, _ := containsFile(RemoveDirectoryPrefix(mod), files)
 
-					if !ok {
-						files = append(files, RemoveDirectoryPrefix(mod))
+					v, ok := fileStatus[mod]
+
+					if ok {
+						if timestamp.After(v.t) {
+							v.removed = false
+							v.t = timestamp
+						}
+					} else {
+						fileStatus[mod] = &timeDiff{
+							t: timestamp,
+						}
 					}
+
 				}
 
 				for _, rem := range commit.Removed {
-					files = RemoveDuplicates(files, RemoveDirectoryPrefix(rem))
+					fileStatus[rem] = &timeDiff{
+						removed: true,
+						t:       timestamp,
+					}
+
 				}
 			}
 
-			req.FileNames = files
+			var sanitizedFiles []string
+
+			for k, v := range fileStatus {
+				if v.removed {
+					continue
+				}
+				sanitizedFiles = append(sanitizedFiles, k)
+			}
+
+			req.FileNames = RemoveDirectoryPrefix(sanitizedFiles)
 
 			if languages := s.GetLanguagesUsedInBranch(&req); len(languages) != 0 {
 				branch.Meta.SetLanguages(ConvertToBranchLanguages(languages))
