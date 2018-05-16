@@ -121,7 +121,7 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 				sanitizedFiles = append(sanitizedFiles, k)
 			}
 
-			req.FileNames = RemoveDirectoryPrefix(sanitizedFiles)
+			req.FileNames = sanitizedFiles
 
 			if languages := s.GetLanguagesUsedInBranch(&req); len(languages) != 0 {
 				branch.Meta.SetLanguages(ConvertToBranchLanguages(languages))
