@@ -1,0 +1,54 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "coordinator.fullname" . }}
+  labels:
+    app: {{ template "coordinator.name" . }}
+    chart: {{ template "coordinator.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "coordinator.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "coordinator.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:9.6.2
+        command: ['sh', '-c', 'until pg_isready -h {{ template "coordinator.postgresql.fullname" . }}; do echo waiting for postgres service; sleep 2; done; sleep 2;']
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DATABASE_HOST
+              value: {{ template "coordinator.postgresql.fullname" . }}
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_USER
+              value: {{ .Values.postgresql.postgresUser }}
+            - name: DATABASE_PASS
+              valueFrom:
+                secretKeyRef:
+                 name: {{ template "coordinator.postgresql.fullname" . }}
+                 key: postgres-password
+            - name: MIGRATION_FILE_LOCATION
+              value: {{ .Values.migrationFileLocation }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+      volumeMounts:
+      - name: config
+        mountPath: {{ .Values.migrationFileLocation }}
+  volumes:
+    - name: config
+      configMap:
+        name: {{ template "coordinator.name" . }}
