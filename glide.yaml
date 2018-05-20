@@ -24,4 +24,5 @@ import:
 - package: github.com/mattes/migrate
   version: 3.0.1
 - package: github.com/vastness-io/coordinator-svc
-  version: 0.2.0
+  version: feature/add-querying
+- package: github.com/vastness-io/gormer.git

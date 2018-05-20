@@ -1,17 +1,15 @@
 syntax = "proto3";
 
-import "google/protobuf/empty.proto";
-
 import "repository.proto";
 
 package project;
 
 service Projects {
-    rpc GetProjects (google.protobuf.Empty) returns (GetProjectsResponse);
-    rpc GetProject (GetProjectMessage) returns (Project);
+    rpc GetProjects (GetProjectsRequest) returns (GetProjectsResponse);
+    rpc GetProject (GetProjectRequest) returns (Project);
 }
 
-message GetProjectMessage {
+message GetProjectRequest {
     string name = 1;
     string type = 2;
 }
@@ -23,6 +21,17 @@ message Project {
 }
 
 message GetProjectsResponse {
-    repeated Project projects = 1;
+    message Meta {
+        int32 current_page = 1;
+        int32 last_page = 3;
+        int32 per_page = 4;
+        int32 total_count = 5;
+    }
+    Meta meta = 1;
+    repeated Project projects = 2;
 }
 
+message GetProjectsRequest {
+    int32 start_page = 1;
+    int32 limit = 2;
+}

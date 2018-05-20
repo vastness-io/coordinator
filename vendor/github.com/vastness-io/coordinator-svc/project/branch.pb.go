@@ -16,9 +16,10 @@ It has these top-level messages:
 	Branch
 	Commit
 	Language
-	GetProjectMessage
+	GetProjectRequest
 	Project
 	GetProjectsResponse
+	GetProjectsRequest
 	Repository
 */
 package project

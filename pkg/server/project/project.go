@@ -2,7 +2,6 @@ package project
 
 import (
 	"context"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/sirupsen/logrus"
 	project_message "github.com/vastness-io/coordinator-svc/project"
 	"github.com/vastness-io/coordinator/pkg/errors"
@@ -23,8 +22,8 @@ func NewProjectInformationServer(service project.Service, logger *logrus.Entry) 
 	}
 }
 
-func (p *ProjectsInformationServer) GetProject(ctx context.Context, message *project_message.GetProjectMessage) (*project_message.Project, error) {
-	prj, err := p.service.GetProject(message.Name, message.Type)
+func (p *ProjectsInformationServer) GetProject(ctx context.Context, req *project_message.GetProjectRequest) (*project_message.Project, error) {
+	prj, err := p.service.GetProject(req.Name, req.Type)
 
 	if err != nil {
 		if err == errors.ProjectDoesNotExistErr {
@@ -36,8 +35,12 @@ func (p *ProjectsInformationServer) GetProject(ctx context.Context, message *pro
 	return prj, nil
 }
 
-func (p *ProjectsInformationServer) GetProjects(ctx context.Context, empty *empty.Empty) (*project_message.GetProjectsResponse, error) {
-	return &project_message.GetProjectsResponse{
-		Projects: p.service.GetProjects(),
-	}, nil
+func (p *ProjectsInformationServer) GetProjects(ctx context.Context, req *project_message.GetProjectsRequest) (*project_message.GetProjectsResponse, error) {
+	projects, err := p.service.GetProjects(int(req.GetStartPage()), int(req.GetLimit()))
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return projects, nil
 }

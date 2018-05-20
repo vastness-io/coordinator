@@ -30,16 +30,28 @@ func (ps *projectService) GetProject(name, vcsType string) (*project.Project, er
 
 }
 
-func (ps *projectService) GetProjects() (out []*project.Project) {
+func (ps *projectService) GetProjects(offset, limit int) (*project.GetProjectsResponse, error) {
 	db := ps.repository.DB()
-	projectModels, err := ps.repository.GetProjects(db)
+	projectPage, err := ps.repository.GetProjects(db, offset, limit)
 
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	for _, prj := range projectModels {
-		out = append(out, FromProjectModel(prj))
+	out := project.GetProjectsResponse{
+		Projects: make([]*project.Project, len(projectPage.Projects)),
 	}
-	return
+
+	for i, _ := range projectPage.Projects {
+		out.Projects[i] = FromProjectModel(projectPage.Projects[i])
+	}
+
+	out.Meta = &project.GetProjectsResponse_Meta{
+		CurrentPage: int32(projectPage.Meta.CurrentPage),
+		LastPage:    int32(projectPage.Meta.LastPage),
+		PerPage:     int32(projectPage.Meta.PerPage),
+		TotalCount:  int32(projectPage.Meta.TotalCount),
+	}
+
+	return &out, nil
 }

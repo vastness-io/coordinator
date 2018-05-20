@@ -1,0 +1,6 @@
+package: github.com/vastness-io/gormer
+import:
+- package: github.com/jinzhu/gorm
+  version: v1.9.1
+- package: github.com/golang/mock
+  version: v1.1.1

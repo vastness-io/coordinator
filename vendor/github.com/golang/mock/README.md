@@ -13,7 +13,7 @@ Once you have [installed Go][golang-install], run these commands
 to install the `gomock` package and the `mockgen` tool:
 
     go get github.com/golang/mock/gomock
-    go get github.com/golang/mock/mockgen
+    go install github.com/golang/mock/mockgen
 
 
 Documentation
@@ -73,6 +73,14 @@ It supports the following flags:
     package name of that file used by the -source file.
 
 *  `-build_flags`: (reflect mode only) Flags passed verbatim to `go build`.
+
+* `-mock_names`: A list of custom names for generated mocks. This is specified 
+	as a comma-separated list of elements of the form
+	`Repository=MockSensorRepository,Endpoint=MockSensorEndpoint`, where 
+	`Repository` is the interface name and `MockSensorRepository` is the desired
+	mock name (mock factory method and mock recorder will be named after the mock).
+	If one of the interfaces has no custom name specified, then default naming
+	convention will be used.
 
 For an example of the use of `mockgen`, see the `sample/` directory. In simple
 cases, you will need only the `-source` flag.

@@ -7,6 +7,7 @@ import (
 	"github.com/vastness-io/coordinator/pkg/errors"
 	"github.com/vastness-io/coordinator/pkg/model"
 	"github.com/vastness-io/coordinator/pkg/repository/mock"
+	"github.com/vastness-io/gormer/mock/golang/mock"
 	"reflect"
 	"testing"
 )
@@ -14,7 +15,7 @@ import (
 func TestGetProject(t *testing.T) {
 	tests := []struct {
 		inProject           *model.Project
-		mockRepositorySetup func(*mock_repository.MockProjectRepository, *mock_repository.MockDB, *model.Project, error)
+		mockRepositorySetup func(*mock_repository.MockProjectRepository, *mock_gormer.MockDB, *model.Project, error)
 		err                 error
 		expected            *project.Project
 	}{
@@ -29,7 +30,7 @@ func TestGetProject(t *testing.T) {
 				Type:         "GITHUB",
 				Repositories: []*project.Repository{},
 			},
-			mockRepositorySetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_repository.MockDB, inProject *model.Project, err error) {
+			mockRepositorySetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_gormer.MockDB, inProject *model.Project, err error) {
 				mockProjectRepository.EXPECT().DB().Return(mockDb)
 				mockProjectRepository.EXPECT().GetProject(gomock.Eq(mockDb), inProject.Name, inProject.Type).Return(inProject, err)
 
@@ -42,7 +43,7 @@ func TestGetProject(t *testing.T) {
 			},
 			err:      errors.ProjectDoesNotExistErr,
 			expected: nil,
-			mockRepositorySetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_repository.MockDB, inProject *model.Project, err error) {
+			mockRepositorySetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_gormer.MockDB, inProject *model.Project, err error) {
 				mockProjectRepository.EXPECT().DB().Return(mockDb)
 				mockProjectRepository.EXPECT().GetProject(gomock.Eq(mockDb), inProject.Name, inProject.Type).Return(nil, err)
 
@@ -59,7 +60,7 @@ func TestGetProject(t *testing.T) {
 				Type:         "BITBUCKET-SERVER",
 				Repositories: []*project.Repository{},
 			},
-			mockRepositorySetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_repository.MockDB, inProject *model.Project, err error) {
+			mockRepositorySetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_gormer.MockDB, inProject *model.Project, err error) {
 				mockProjectRepository.EXPECT().DB().Return(mockDb)
 				mockProjectRepository.EXPECT().GetProject(gomock.Eq(mockDb), inProject.Name, inProject.Type).Return(inProject, err)
 
@@ -74,7 +75,7 @@ func TestGetProject(t *testing.T) {
 				mockProjectRepository = mock_repository.NewMockProjectRepository(ctrl)
 				log                   = logrus.New().WithField("testing", true)
 				projectSvc            = NewProjectService(log, mockProjectRepository)
-				mockDb                = mock_repository.NewMockDB(ctrl)
+				mockDb                = mock_gormer.NewMockDB(ctrl)
 			)
 			defer ctrl.Finish()
 
@@ -95,78 +96,105 @@ func TestGetProject(t *testing.T) {
 
 func TestGetProjects(t *testing.T) {
 	tests := []struct {
-		mockRepositorySetup func(*mock_repository.MockProjectRepository, *mock_repository.MockDB, []*model.Project, error)
+		mockRepositorySetup func(*mock_repository.MockProjectRepository, *mock_gormer.MockDB, *model.ProjectPage, int, int, error)
 		err                 error
-		in                  []*model.Project
-		expected            []*project.Project
-		error               error
+		in                  *model.ProjectPage
+		startPage           int
+		limit               int
+		expected            *project.GetProjectsResponse
 	}{
 		{
-			in: []*model.Project{
-				{
-					Name:         "project_1",
-					Type:         "GITHUB",
-					Repositories: []*model.Repository{},
-				},
-				{
-					Name:         "project_2",
-					Type:         "GITHUB",
-					Repositories: []*model.Repository{},
-				},
-				{
-					Name:         "project_3",
-					Type:         "BITBUCKET_SERVER",
-					Repositories: []*model.Repository{},
+			in: &model.ProjectPage{
+				Meta: struct {
+					CurrentPage int
+					LastPage    int
+					PerPage     int
+					TotalCount  int
+				}{CurrentPage: 1, LastPage: 1, PerPage: 5, TotalCount: 5},
+				Projects: []*model.Project{
+					{
+						Name:         "project_1",
+						Type:         "GITHUB",
+						Repositories: []*model.Repository{},
+					},
+					{
+						Name:         "project_2",
+						Type:         "GITHUB",
+						Repositories: []*model.Repository{},
+					},
+					{
+						Name:         "project_3",
+						Type:         "BITBUCKET_SERVER",
+						Repositories: []*model.Repository{},
+					},
 				},
 			},
-			err:      errors.ProjectDoesNotExistErr,
-			expected: nil,
-			mockRepositorySetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_repository.MockDB, in []*model.Project, err error) {
+			err:       errors.ProjectDoesNotExistErr,
+			startPage: 0,
+			limit:     5,
+			expected:  nil,
+			mockRepositorySetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_gormer.MockDB, in *model.ProjectPage, startPage, limit int, err error) {
 				mockProjectRepository.EXPECT().DB().Return(mockDb)
-				mockProjectRepository.EXPECT().GetProjects(gomock.Eq(mockDb)).Return(nil, err)
-
+				mockProjectRepository.EXPECT().GetProjects(mockDb, startPage, limit).Return(nil, err)
 			},
 		},
 		{
-			in: []*model.Project{
-				{
-					Name:         "project_1",
-					Type:         "GITHUB",
-					Repositories: []*model.Repository{},
-				},
-				{
-					Name:         "project_2",
-					Type:         "GITHUB",
-					Repositories: []*model.Repository{},
-				},
-				{
-					Name:         "project_3",
-					Type:         "BITBUCKET_SERVER",
-					Repositories: []*model.Repository{},
-				},
-			},
-			err: nil,
-			expected: []*project.Project{
-				{
-					Name:         "project_1",
-					Type:         "GITHUB",
-					Repositories: []*project.Repository{},
-				},
-				{
-					Name:         "project_2",
-					Type:         "GITHUB",
-					Repositories: []*project.Repository{},
-				},
-				{
-					Name:         "project_3",
-					Type:         "BITBUCKET_SERVER",
-					Repositories: []*project.Repository{},
+			in: &model.ProjectPage{
+				Meta: struct {
+					CurrentPage int
+					LastPage    int
+					PerPage     int
+					TotalCount  int
+				}{CurrentPage: 1, LastPage: 1, PerPage: 5, TotalCount: 5},
+				Projects: []*model.Project{
+					{
+						Name:         "project_1",
+						Type:         "GITHUB",
+						Repositories: []*model.Repository{},
+					},
+					{
+						Name:         "project_2",
+						Type:         "GITHUB",
+						Repositories: []*model.Repository{},
+					},
+					{
+						Name:         "project_3",
+						Type:         "BITBUCKET_SERVER",
+						Repositories: []*model.Repository{},
+					},
 				},
 			},
-			mockRepositorySetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_repository.MockDB, in []*model.Project, err error) {
+			err:       nil,
+			startPage: 1,
+			limit:     5,
+			expected: &project.GetProjectsResponse{
+				Meta: &project.GetProjectsResponse_Meta{
+					CurrentPage: 1,
+					LastPage:    1,
+					PerPage:     5,
+					TotalCount:  5,
+				},
+				Projects: []*project.Project{
+					{
+						Name:         "project_1",
+						Type:         "GITHUB",
+						Repositories: []*project.Repository{},
+					},
+					{
+						Name:         "project_2",
+						Type:         "GITHUB",
+						Repositories: []*project.Repository{},
+					},
+					{
+						Name:         "project_3",
+						Type:         "BITBUCKET_SERVER",
+						Repositories: []*project.Repository{},
+					},
+				},
+			},
+			mockRepositorySetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_gormer.MockDB, in *model.ProjectPage, startPage, limit int, err error) {
 				mockProjectRepository.EXPECT().DB().Return(mockDb)
-				mockProjectRepository.EXPECT().GetProjects(gomock.Eq(mockDb)).Return(in, err)
-
+				mockProjectRepository.EXPECT().GetProjects(mockDb, startPage, limit).Return(in, err)
 			},
 		},
 	}
@@ -178,13 +206,17 @@ func TestGetProjects(t *testing.T) {
 				mockProjectRepository = mock_repository.NewMockProjectRepository(ctrl)
 				log                   = logrus.New().WithField("testing", true)
 				projectSvc            = NewProjectService(log, mockProjectRepository)
-				mockDb                = mock_repository.NewMockDB(ctrl)
+				mockDb                = mock_gormer.NewMockDB(ctrl)
 			)
 			defer ctrl.Finish()
 
-			test.mockRepositorySetup(mockProjectRepository, mockDb, test.in, test.error)
+			test.mockRepositorySetup(mockProjectRepository, mockDb, test.in, test.startPage, test.limit, test.err)
 
-			projects := projectSvc.GetProjects()
+			projects, err := projectSvc.GetProjects(test.startPage, test.limit)
+
+			if err != test.err {
+				t.Fatalf("should equal")
+			}
 
 			if !reflect.DeepEqual(test.expected, projects) {
 				t.Fatalf("Expected %v, got %v", test.expected, projects)

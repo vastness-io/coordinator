@@ -34,8 +34,8 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 		}
 	}()
 
-	if tx.GetError() != nil {
-		return nil, tx.GetError()
+	if tx.Error() != nil {
+		return nil, tx.Error()
 	}
 
 	current, err := s.repository.GetProject(tx, project.Name, project.Type)
@@ -138,7 +138,7 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 		return nil, err
 	}
 
-	return current, tx.Commit().GetError()
+	return current, tx.Commit().Error()
 
 }
 
