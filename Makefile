@@ -23,6 +23,8 @@ up: build
 generate:
 	@echo "=> generating mocks"
 	./hack/generate-mocks.sh
+	@echo "=> generating embedded migration files"
+	./hack/generate-migrations.sh
 
 container: build
 	docker build -t quay.io/vastness/coordinator:${COMMIT} .

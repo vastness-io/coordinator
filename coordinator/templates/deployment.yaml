@@ -39,8 +39,6 @@ spec:
                 secretKeyRef:
                  name: {{ template "coordinator.postgresql.fullname" . }}
                  key: postgres-password
-            - name: MIGRATION_FILE_LOCATION
-              value: {{ .Values.migrationFileLocation }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}

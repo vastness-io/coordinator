@@ -9,8 +9,6 @@ service:
   type: ClusterIP
   port: 8080
 
-migrationFileLocation: /migration
-
 ingress:
   enabled: false
 
