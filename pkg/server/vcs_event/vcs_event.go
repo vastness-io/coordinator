@@ -26,7 +26,7 @@ func (s *vcsEventServer) OnPush(ctx context.Context, event *vcs.VcsPushEvent) (*
 
 	project := ConvertToProjectModel(event)
 
-	project, err := s.service.UpdateProject(project)
+	project, err := s.service.UpdateProject(ctx, project)
 
 	if err != nil {
 		return res, err
