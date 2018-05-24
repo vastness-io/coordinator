@@ -6,7 +6,6 @@ import (
 	"github.com/vastness-io/coordinator/pkg/errors"
 	"github.com/vastness-io/coordinator/pkg/model"
 	"github.com/vastness-io/coordinator/pkg/repository"
-	"github.com/vastness-io/coordinator/pkg/shared"
 	"github.com/vastness-io/linguist-svc"
 	"time"
 )
@@ -25,7 +24,7 @@ func NewVcsEventService(logger *logrus.Entry, linguistClient linguist.LinguistCl
 	}
 }
 
-func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project, error) {
+func (s *vcsEventService) UpdateProject(ctx context.Context, project *model.Project) (*model.Project, error) {
 
 	tx := s.repository.DB().Begin()
 	defer func() {
@@ -123,7 +122,7 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 
 			req.FileNames = sanitizedFiles
 
-			if languages := s.GetLanguagesUsedInBranch(&req); len(languages) != 0 {
+			if languages := s.GetLanguagesUsedInBranch(ctx, &req); len(languages) != 0 {
 				branch.Meta.SetLanguages(ConvertToBranchLanguages(languages))
 			}
 
@@ -142,11 +141,7 @@ func (s *vcsEventService) UpdateProject(project *model.Project) (*model.Project,
 
 }
 
-func (s *vcsEventService) GetLanguagesUsedInBranch(req *linguist.LanguageRequest) []*linguist.Language {
-
-	ctx, cancel := context.WithTimeout(context.Background(), shared.LanguageReqTimeout) // Don't think this is the right way to do it?
-	defer cancel()
-
+func (s *vcsEventService) GetLanguagesUsedInBranch(ctx context.Context, req *linguist.LanguageRequest) []*linguist.Language {
 	res, err := s.linguist.GetLanguages(ctx, req)
 
 	if err != nil {

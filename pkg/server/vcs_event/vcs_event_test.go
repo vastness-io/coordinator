@@ -14,12 +14,12 @@ import (
 
 type NOOPService struct{}
 
-func (n *NOOPService) GetLanguagesUsedInBranch(_ *linguist.LanguageRequest) []*linguist.Language {
+func (n *NOOPService) GetLanguagesUsedInBranch(_ context.Context, _ *linguist.LanguageRequest) []*linguist.Language {
 	var result []*linguist.Language
 	return result
 }
 
-func (n *NOOPService) UpdateProject(project *model.Project) (*model.Project, error) {
+func (n *NOOPService) UpdateProject(_ context.Context, project *model.Project) (*model.Project, error) {
 	return &model.Project{}, nil
 }
 

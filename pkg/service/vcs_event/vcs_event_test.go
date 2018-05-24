@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"testing"
 	"time"
+	"context"
 )
 
 func TestGetLanguagesUsedInRepository(t *testing.T) {
@@ -63,7 +64,7 @@ func TestGetLanguagesUsedInRepository(t *testing.T) {
 
 			mockClient.EXPECT().GetLanguages(gomock.Any(), langReq).Return(langRes, test.err)
 
-			languages := eventSvc.GetLanguagesUsedInBranch(langReq)
+			languages := eventSvc.GetLanguagesUsedInBranch(context.TODO(),langReq)
 
 			if len(languages) != len(test.expectedDetectedLangs) {
 				t.Fatal("Should equal")
@@ -243,7 +244,7 @@ func TestUpdateProject(t *testing.T) {
 
 			test.mockSetup(mockProjectRepository, mockDb, mockClient, test.inProject, test.err)
 
-			p, err := eventSvc.UpdateProject(test.inProject)
+			p, err := eventSvc.UpdateProject(context.TODO(), test.inProject)
 
 			if err != test.err {
 				t.Fatalf("Expected %v, got %v", test.err, err)
