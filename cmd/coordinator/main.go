@@ -5,12 +5,14 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/mattes/migrate"
-	"github.com/mattes/migrate/database/postgres"
+	_ "github.com/mattes/migrate/database/postgres"
 	_ "github.com/mattes/migrate/source/file"
+	"github.com/mattes/migrate/source/go-bindata"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/vastness-io/coordinator-svc/project"
+	"github.com/vastness-io/coordinator/db/migration"
 	"github.com/vastness-io/coordinator/pkg/repository"
 	project_server "github.com/vastness-io/coordinator/pkg/server/project"
 	event_server "github.com/vastness-io/coordinator/pkg/server/vcs_event"
@@ -28,26 +30,26 @@ import (
 )
 
 const (
-	name             = "coordinator"
-	description      = "Ensures components work together."
-	supportedDb      = "postgres"
-	dbName           = "postgres"
-	connectionString = "host=%s port=%v user=%s dbname=%s password=%s sslmode=disable"
+	name                     = "coordinator"
+	description              = "Ensures components work together."
+	supportedDb              = "postgres"
+	dbName                   = "postgres"
+	connectionStringTemplate = "host=%s port=%v user=%s dbname=%s password=%s sslmode=disable"
+	migrationStringTemplate  = "postgres://%s:%s@%s:%v/%s?sslmode=disable"
 )
 
 var (
-	log                   = logrus.WithField("component", name)
-	commit                string
-	version               string
-	addr                  string
-	port                  int
-	databaseHost          string
-	databasePort          int
-	databaseUser          string
-	databasePass          string
-	migrationFileLocation string
-	linguistSrv           string
-	debugMode             bool
+	log          = logrus.WithField("component", name)
+	commit       string
+	version      string
+	addr         string
+	port         int
+	databaseHost string
+	databasePort int
+	databaseUser string
+	databasePass string
+	linguistSrv  string
+	debugMode    bool
 )
 
 func init() {
@@ -101,13 +103,6 @@ func main() {
 			EnvVar:      "DATABASE_PASS",
 		},
 		cli.StringFlag{
-			Name:        "migration-file-location, migrate",
-			Usage:       "Location of Database migration files",
-			Value:       "/migration",
-			Destination: &migrationFileLocation,
-			EnvVar:      "MIGRATION_FILE_LOCATION",
-		},
-		cli.StringFlag{
 			Name:        "linguist,s",
 			Usage:       "Linguist Service address.",
 			Value:       "127.0.0.1:8082",
@@ -133,10 +128,12 @@ func run() {
 	log.Infof("Starting %s", name)
 
 	var (
-		address  = net.JoinHostPort(addr, strconv.Itoa(port))
-		tracer   = opentracing.GlobalTracer()
-		lis, err = net.Listen("tcp", address)
-		srv      = toolkit.NewGRPCServer(tracer, log)
+		address          = net.JoinHostPort(addr, strconv.Itoa(port))
+		tracer           = opentracing.GlobalTracer()
+		lis, err         = net.Listen("tcp", address)
+		srv              = toolkit.NewGRPCServer(tracer, log)
+		connectionString = fmt.Sprintf(connectionStringTemplate, databaseHost, databasePort, databaseUser, dbName, databasePass)
+		migrationString  = fmt.Sprintf(migrationStringTemplate, databaseUser, databasePass, databaseHost, databasePort, dbName)
 	)
 
 	if err != nil {
@@ -151,27 +148,43 @@ func run() {
 
 	defer linguistConn.Close()
 
-	gormDB, err := gorm.Open(supportedDb, fmt.Sprintf(connectionString, databaseHost, databasePort, databaseUser, dbName, databasePass))
+	gormDB, err := gorm.Open(supportedDb, connectionString)
 	defer gormDB.Close()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	driver, err := postgres.WithInstance(gormDB.DB(), &postgres.Config{})
+	s := bindata.Resource(migration.AssetNames(),
+		func(name string) ([]byte, error) {
+			return migration.Asset(name)
+		})
 
-	log.Infof("Running migrations from %s", migrationFileLocation)
-
-	m, err := migrate.NewWithDatabaseInstance(
-		fmt.Sprintf("file://%s", migrationFileLocation),
-		dbName, driver)
+	d, err := bindata.WithInstance(s)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	m, err := migrate.NewWithSourceInstance("go-bindata", d, migrationString)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Infof("Running db migrations")
+
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		log.Fatal(err)
+	}
+
+	err1, err2 := m.Close()
+
+	if err1 != nil {
+		log.Fatalf("could not close migrate source: %v", err1)
+	}
+	if err2 != nil {
+		log.Fatalf("could not close migrate database: %v", err2)
 	}
 
 	var (

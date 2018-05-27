@@ -1,0 +1,20 @@
+replicaCount: 2
+image:
+  registry: quay.io
+  repository: vastness/coordinator
+  tag: 0.1.5
+  pullPolicy: IfNotPresent
+service:
+  name: coordinator
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+
+postgresql:
+   postgresUser: postgress
+   postgresPassword: postgres
+   postgresDatabase: postgres
+   persistence:
+     enabled: false
