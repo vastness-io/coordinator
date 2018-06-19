@@ -18,6 +18,7 @@ import (
 	event_server "github.com/vastness-io/coordinator/pkg/server/vcs_event"
 	project_service "github.com/vastness-io/coordinator/pkg/service/project"
 	event_service "github.com/vastness-io/coordinator/pkg/service/vcs_event"
+	"github.com/vastness-io/gormer"
 	"github.com/vastness-io/linguist-svc"
 	toolkit "github.com/vastness-io/toolkit/pkg/grpc"
 	vcswebhook "github.com/vastness-io/vcs-webhook-svc/webhook"
@@ -188,7 +189,7 @@ func run() {
 	}
 
 	var (
-		db                       = repository.NewDB(gormDB)
+		db                       = gormer.Wrap(gormDB)
 		projectRepository        = repository.NewProjectRepository(db)
 		linguistClient           = linguist.NewLinguistClient(linguistConn)
 		vcsEventService          = event_service.NewVcsEventService(log.WithField("service", "vcs_event"), linguistClient, projectRepository)

@@ -6,7 +6,7 @@ package mock_repository
 import (
 	gomock "github.com/golang/mock/gomock"
 	model "github.com/vastness-io/coordinator/pkg/model"
-	repository "github.com/vastness-io/coordinator/pkg/repository"
+	gormer "github.com/vastness-io/gormer"
 	reflect "reflect"
 )
 
@@ -34,7 +34,7 @@ func (_m *MockProjectRepository) EXPECT() *MockProjectRepositoryMockRecorder {
 }
 
 // Create mocks base method
-func (_m *MockProjectRepository) Create(_param0 repository.DB, _param1 *model.Project) error {
+func (_m *MockProjectRepository) Create(_param0 gormer.DB, _param1 *model.Project) error {
 	ret := _m.ctrl.Call(_m, "Create", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -46,9 +46,9 @@ func (_mr *MockProjectRepositoryMockRecorder) Create(arg0, arg1 interface{}) *go
 }
 
 // DB mocks base method
-func (_m *MockProjectRepository) DB() repository.DB {
+func (_m *MockProjectRepository) DB() gormer.DB {
 	ret := _m.ctrl.Call(_m, "DB")
-	ret0, _ := ret[0].(repository.DB)
+	ret0, _ := ret[0].(gormer.DB)
 	return ret0
 }
 
@@ -58,7 +58,7 @@ func (_mr *MockProjectRepositoryMockRecorder) DB() *gomock.Call {
 }
 
 // Delete mocks base method
-func (_m *MockProjectRepository) Delete(_param0 repository.DB, _param1 string, _param2 string) (bool, error) {
+func (_m *MockProjectRepository) Delete(_param0 gormer.DB, _param1 string, _param2 string) (bool, error) {
 	ret := _m.ctrl.Call(_m, "Delete", _param0, _param1, _param2)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
@@ -71,7 +71,7 @@ func (_mr *MockProjectRepositoryMockRecorder) Delete(arg0, arg1, arg2 interface{
 }
 
 // GetProject mocks base method
-func (_m *MockProjectRepository) GetProject(_param0 repository.DB, _param1 string, _param2 string) (*model.Project, error) {
+func (_m *MockProjectRepository) GetProject(_param0 gormer.DB, _param1 string, _param2 string) (*model.Project, error) {
 	ret := _m.ctrl.Call(_m, "GetProject", _param0, _param1, _param2)
 	ret0, _ := ret[0].(*model.Project)
 	ret1, _ := ret[1].(error)
@@ -84,7 +84,7 @@ func (_mr *MockProjectRepositoryMockRecorder) GetProject(arg0, arg1, arg2 interf
 }
 
 // GetProjects mocks base method
-func (_m *MockProjectRepository) GetProjects(_param0 repository.DB) ([]*model.Project, error) {
+func (_m *MockProjectRepository) GetProjects(_param0 gormer.DB) ([]*model.Project, error) {
 	ret := _m.ctrl.Call(_m, "GetProjects", _param0)
 	ret0, _ := ret[0].([]*model.Project)
 	ret1, _ := ret[1].(error)
@@ -97,7 +97,7 @@ func (_mr *MockProjectRepositoryMockRecorder) GetProjects(arg0 interface{}) *gom
 }
 
 // Update mocks base method
-func (_m *MockProjectRepository) Update(_param0 repository.DB, _param1 *model.Project) error {
+func (_m *MockProjectRepository) Update(_param0 gormer.DB, _param1 *model.Project) error {
 	ret := _m.ctrl.Call(_m, "Update", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0

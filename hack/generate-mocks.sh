@@ -1,2 +1,1 @@
 mockgen github.com/vastness-io/coordinator/pkg/repository ProjectRepository > pkg/repository/mock/project_mock.go
-mockgen -imports "_=github.com/jinzhu/gorm" github.com/vastness-io/coordinator/pkg/repository DB > pkg/repository/mock/db_mock.go

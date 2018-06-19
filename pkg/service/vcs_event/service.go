@@ -1,9 +1,9 @@
 package vcs_event
 
 import (
+	"context"
 	"github.com/vastness-io/coordinator/pkg/model"
 	"github.com/vastness-io/linguist-svc"
-	"context"
 )
 
 type Service interface {
