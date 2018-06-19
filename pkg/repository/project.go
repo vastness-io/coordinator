@@ -4,30 +4,31 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/vastness-io/coordinator/pkg/errors"
 	"github.com/vastness-io/coordinator/pkg/model"
+	"github.com/vastness-io/gormer"
 )
 
 type projectRepository struct {
-	tx DB
+	tx gormer.DB
 }
 
-func NewProjectRepository(tx DB) ProjectRepository {
+func NewProjectRepository(tx gormer.DB) ProjectRepository {
 	return &projectRepository{
 		tx: tx,
 	}
 }
 
-func (r *projectRepository) DB() DB {
+func (r *projectRepository) DB() gormer.DB {
 	return r.tx
 }
 
-func (r *projectRepository) Create(tx DB, project *model.Project) error {
-	return tx.Create(project)
+func (r *projectRepository) Create(tx gormer.DB, project *model.Project) error {
+	return tx.Create(project).Error()
 }
 
-func (r *projectRepository) GetProject(tx DB, name string, vcsType string) (*model.Project, error) {
+func (r *projectRepository) GetProject(tx gormer.DB, name string, vcsType string) (*model.Project, error) {
 	var out model.Project
 
-	err := tx.Preload("Repositories.Branches").Preload("Repositories.Branches.Commits").First(&out, "name = ? AND type = ?", name, vcsType)
+	err := tx.Preload("Repositories.Branches").Preload("Repositories.Branches.Commits").First(&out, "name = ? AND type = ?", name, vcsType).Error()
 
 	if err != nil {
 
@@ -41,10 +42,10 @@ func (r *projectRepository) GetProject(tx DB, name string, vcsType string) (*mod
 	return &out, nil
 }
 
-func (r *projectRepository) GetProjects(tx DB) ([]*model.Project, error) {
+func (r *projectRepository) GetProjects(tx gormer.DB) ([]*model.Project, error) {
 	var out []*model.Project
 
-	err := tx.Preload("Repositories.Branches").Preload("Repositories.Branches.Commits").Find(&out)
+	err := tx.Preload("Repositories.Branches").Preload("Repositories.Branches.Commits").Find(&out).Error()
 
 	if err != nil {
 
@@ -57,12 +58,12 @@ func (r *projectRepository) GetProjects(tx DB) ([]*model.Project, error) {
 	return out, nil
 }
 
-func (r *projectRepository) Delete(tx DB, name string, vcsType string) (bool, error) {
+func (r *projectRepository) Delete(tx gormer.DB, name string, vcsType string) (bool, error) {
 	toBeDeleted := model.Project{
 		Name: name,
 		Type: vcsType,
 	}
-	err := tx.Delete(&toBeDeleted)
+	err := tx.Delete(&toBeDeleted).Error()
 
 	if err != nil {
 		if gorm.IsRecordNotFoundError(err) {
@@ -74,6 +75,6 @@ func (r *projectRepository) Delete(tx DB, name string, vcsType string) (bool, er
 	return true, nil
 }
 
-func (r *projectRepository) Update(tx DB, project *model.Project) error {
-	return tx.Save(project)
+func (r *projectRepository) Update(tx gormer.DB, project *model.Project) error {
+	return tx.Save(project).Error()
 }

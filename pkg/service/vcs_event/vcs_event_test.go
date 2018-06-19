@@ -1,18 +1,19 @@
 package vcs_event
 
 import (
+	"context"
 	stdlib "errors"
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
 	"github.com/vastness-io/coordinator/pkg/errors"
 	"github.com/vastness-io/coordinator/pkg/model"
 	"github.com/vastness-io/coordinator/pkg/repository/mock"
+	"github.com/vastness-io/gormer/mock/golang/mock"
 	"github.com/vastness-io/linguist-svc"
 	"github.com/vastness-io/linguist-svc/mock/linguist"
 	"reflect"
 	"testing"
 	"time"
-	"context"
 )
 
 func TestGetLanguagesUsedInRepository(t *testing.T) {
@@ -64,7 +65,7 @@ func TestGetLanguagesUsedInRepository(t *testing.T) {
 
 			mockClient.EXPECT().GetLanguages(gomock.Any(), langReq).Return(langRes, test.err)
 
-			languages := eventSvc.GetLanguagesUsedInBranch(context.TODO(),langReq)
+			languages := eventSvc.GetLanguagesUsedInBranch(context.TODO(), langReq)
 
 			if len(languages) != len(test.expectedDetectedLangs) {
 				t.Fatal("Should equal")
@@ -97,7 +98,7 @@ func TestUpdateProject(t *testing.T) {
 		inProject  *model.Project
 		outProject *model.Project
 		err        error
-		mockSetup  func(*mock_repository.MockProjectRepository, *mock_repository.MockDB, *mock_linguist_svc.MockLinguistClient, *model.Project, error)
+		mockSetup  func(*mock_repository.MockProjectRepository, *mock_gormer.MockDB, *mock_linguist_svc.MockLinguistClient, *model.Project, error)
 	}{
 		{
 			inProject: &model.Project{
@@ -108,25 +109,25 @@ func TestUpdateProject(t *testing.T) {
 
 			err: stdlib.New("testing handle of unexpected error returned from db"),
 
-			mockSetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_repository.MockDB, mockLing *mock_linguist_svc.MockLinguistClient, project *model.Project, err error) {
+			mockSetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_gormer.MockDB, mockLing *mock_linguist_svc.MockLinguistClient, project *model.Project, err error) {
 
 				mockProjectRepository.EXPECT().DB().Return(mockDb)
 
 				mockDb.EXPECT().Begin().Return(mockDb)
 
-				mockDb.EXPECT().GetError().Return(nil)
+				mockDb.EXPECT().Error().Return(nil)
 
 				mockProjectRepository.EXPECT().GetProject(gomock.Eq(mockDb), project.Name, project.Type).Return(nil, err)
 			},
 		},
 		{
-			mockSetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_repository.MockDB, mockLing *mock_linguist_svc.MockLinguistClient, project *model.Project, err error) {
+			mockSetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_gormer.MockDB, mockLing *mock_linguist_svc.MockLinguistClient, project *model.Project, err error) {
 				// This test checks if project exists, and performs creation if necessary
 				mockProjectRepository.EXPECT().DB().Return(mockDb)
 
 				mockDb.EXPECT().Begin().Return(mockDb)
 
-				mockDb.EXPECT().GetError().Return(nil)
+				mockDb.EXPECT().Error().Return(nil)
 
 				mockProjectRepository.EXPECT().GetProject(gomock.Eq(mockDb), project.Name, project.Type).Return(nil, errors.ProjectDoesNotExistErr)
 
@@ -145,7 +146,7 @@ func TestUpdateProject(t *testing.T) {
 
 				mockDb.EXPECT().Commit().Return(mockDb)
 
-				mockDb.EXPECT().GetError().Return(err)
+				mockDb.EXPECT().Error().Return(err)
 
 			},
 			err: nil,
@@ -204,13 +205,13 @@ func TestUpdateProject(t *testing.T) {
 			},
 		},
 		{
-			mockSetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_repository.MockDB, mockLing *mock_linguist_svc.MockLinguistClient, project *model.Project, err error) {
+			mockSetup: func(mockProjectRepository *mock_repository.MockProjectRepository, mockDb *mock_gormer.MockDB, mockLing *mock_linguist_svc.MockLinguistClient, project *model.Project, err error) {
 				// Test for rollback
 				mockProjectRepository.EXPECT().DB().Return(mockDb)
 
 				mockDb.EXPECT().Begin().Return(mockDb)
 
-				mockDb.EXPECT().GetError().Return(nil)
+				mockDb.EXPECT().Error().Return(nil)
 
 				mockProjectRepository.EXPECT().GetProject(gomock.Eq(mockDb), project.Name, project.Type).Return(nil, errors.ProjectDoesNotExistErr)
 
@@ -238,7 +239,7 @@ func TestUpdateProject(t *testing.T) {
 				mockProjectRepository = mock_repository.NewMockProjectRepository(ctrl)
 				log                   = logrus.New().WithField("testing", true)
 				eventSvc              = NewVcsEventService(log, mockClient, mockProjectRepository)
-				mockDb                = mock_repository.NewMockDB(ctrl)
+				mockDb                = mock_gormer.NewMockDB(ctrl)
 			)
 			defer ctrl.Finish()
 

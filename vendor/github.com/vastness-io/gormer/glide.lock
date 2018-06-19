@@ -1,0 +1,10 @@
+hash: 583b4cb489f6079d4a2c9ebd528df0ef2db69999ee05f95935f361ec44822c6b
+updated: 2018-05-16T23:00:18.928263+02:00
+imports:
+- name: github.com/golang/mock
+  version: c34cdb4725f4c3844d095133c6e40e448b86589b
+- name: github.com/jinzhu/gorm
+  version: 6ed508ec6a4ecb3531899a69cbc746ccf65a4166
+- name: github.com/jinzhu/inflection
+  version: 04140366298a54a039076d798123ffa108fff46c
+testImports: []

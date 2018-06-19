@@ -40,7 +40,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/encoding"
-	"google.golang.org/grpc/encoding/proto"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/internal"
 	"google.golang.org/grpc/keepalive"
@@ -106,7 +105,7 @@ type Server struct {
 
 type options struct {
 	creds                 credentials.TransportCredentials
-	codec                 baseCodec
+	codec                 Codec
 	cp                    Compressor
 	dc                    Decompressor
 	unaryInt              UnaryServerInterceptor
@@ -183,8 +182,6 @@ func KeepaliveEnforcementPolicy(kep keepalive.EnforcementPolicy) ServerOption {
 }
 
 // CustomCodec returns a ServerOption that sets a codec for message marshaling and unmarshaling.
-//
-// This will override any lookups by content-subtype for Codecs registered with RegisterCodec.
 func CustomCodec(codec Codec) ServerOption {
 	return func(o *options) {
 		o.codec = codec
@@ -329,6 +326,10 @@ func NewServer(opt ...ServerOption) *Server {
 	opts := defaultServerOptions
 	for _, o := range opt {
 		o(&opts)
+	}
+	if opts.codec == nil {
+		// Set the default codec.
+		opts.codec = protoCodec{}
 	}
 	s := &Server{
 		lis:   make(map[net.Listener]bool),
@@ -694,7 +695,7 @@ func (s *Server) serveUsingHandler(conn net.Conn) {
 // available through grpc-go's HTTP/2 server, and it is currently EXPERIMENTAL
 // and subject to change.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	st, err := transport.NewServerHandlerTransport(w, r, s.opts.statsHandler)
+	st, err := transport.NewServerHandlerTransport(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -758,7 +759,7 @@ func (s *Server) sendResponse(t transport.ServerTransport, stream *transport.Str
 	if s.opts.statsHandler != nil {
 		outPayload = &stats.OutPayload{}
 	}
-	hdr, data, err := encode(s.getCodec(stream.ContentSubtype()), msg, cp, outPayload, comp)
+	hdr, data, err := encode(s.opts.codec, msg, cp, outPayload, comp)
 	if err != nil {
 		grpclog.Errorln("grpc: server failed to encode response: ", err)
 		return err
@@ -777,15 +778,13 @@ func (s *Server) sendResponse(t transport.ServerTransport, stream *transport.Str
 func (s *Server) processUnaryRPC(t transport.ServerTransport, stream *transport.Stream, srv *service, md *MethodDesc, trInfo *traceInfo) (err error) {
 	sh := s.opts.statsHandler
 	if sh != nil {
-		beginTime := time.Now()
 		begin := &stats.Begin{
-			BeginTime: beginTime,
+			BeginTime: time.Now(),
 		}
 		sh.HandleRPC(stream.Context(), begin)
 		defer func() {
 			end := &stats.End{
-				BeginTime: beginTime,
-				EndTime:   time.Now(),
+				EndTime: time.Now(),
 			}
 			if err != nil && err != io.EOF {
 				end.Error = toRPCErr(err)
@@ -905,7 +904,7 @@ func (s *Server) processUnaryRPC(t transport.ServerTransport, stream *transport.
 			// java implementation.
 			return status.Errorf(codes.ResourceExhausted, "grpc: received message larger than max (%d vs. %d)", len(req), s.opts.maxReceiveMessageSize)
 		}
-		if err := s.getCodec(stream.ContentSubtype()).Unmarshal(req, v); err != nil {
+		if err := s.opts.codec.Unmarshal(req, v); err != nil {
 			return status.Errorf(codes.Internal, "grpc: error unmarshalling request: %v", err)
 		}
 		if inPayload != nil {
@@ -919,13 +918,12 @@ func (s *Server) processUnaryRPC(t transport.ServerTransport, stream *transport.
 		}
 		return nil
 	}
-	ctx := NewContextWithServerTransportStream(stream.Context(), stream)
-	reply, appErr := md.Handler(srv.server, ctx, df, s.opts.unaryInt)
+	reply, appErr := md.Handler(srv.server, stream.Context(), df, s.opts.unaryInt)
 	if appErr != nil {
 		appStatus, ok := status.FromError(appErr)
 		if !ok {
 			// Convert appErr if it is not a grpc status error.
-			appErr = status.Error(codes.Unknown, appErr.Error())
+			appErr = status.Error(convertCode(appErr), appErr.Error())
 			appStatus, _ = status.FromError(appErr)
 		}
 		if trInfo != nil {
@@ -980,15 +978,13 @@ func (s *Server) processUnaryRPC(t transport.ServerTransport, stream *transport.
 func (s *Server) processStreamingRPC(t transport.ServerTransport, stream *transport.Stream, srv *service, sd *StreamDesc, trInfo *traceInfo) (err error) {
 	sh := s.opts.statsHandler
 	if sh != nil {
-		beginTime := time.Now()
 		begin := &stats.Begin{
-			BeginTime: beginTime,
+			BeginTime: time.Now(),
 		}
 		sh.HandleRPC(stream.Context(), begin)
 		defer func() {
 			end := &stats.End{
-				BeginTime: beginTime,
-				EndTime:   time.Now(),
+				EndTime: time.Now(),
 			}
 			if err != nil && err != io.EOF {
 				end.Error = toRPCErr(err)
@@ -996,13 +992,11 @@ func (s *Server) processStreamingRPC(t transport.ServerTransport, stream *transp
 			sh.HandleRPC(stream.Context(), end)
 		}()
 	}
-	ctx := NewContextWithServerTransportStream(stream.Context(), stream)
 	ss := &serverStream{
-		ctx:   ctx,
 		t:     t,
 		s:     stream,
 		p:     &parser{r: stream},
-		codec: s.getCodec(stream.ContentSubtype()),
+		codec: s.opts.codec,
 		maxReceiveMessageSize: s.opts.maxReceiveMessageSize,
 		maxSendMessageSize:    s.opts.maxSendMessageSize,
 		trInfo:                trInfo,
@@ -1072,7 +1066,7 @@ func (s *Server) processStreamingRPC(t transport.ServerTransport, stream *transp
 			case transport.StreamError:
 				appStatus = status.New(err.Code, err.Desc)
 			default:
-				appStatus = status.New(codes.Unknown, appErr.Error())
+				appStatus = status.New(convertCode(appErr), appErr.Error())
 			}
 			appErr = appStatus.Err()
 		}
@@ -1092,6 +1086,7 @@ func (s *Server) processStreamingRPC(t transport.ServerTransport, stream *transp
 		ss.mu.Unlock()
 	}
 	return t.WriteStatus(ss.s, status.New(codes.OK, ""))
+
 }
 
 func (s *Server) handleStream(t transport.ServerTransport, stream *transport.Stream, trInfo *traceInfo) {
@@ -1171,40 +1166,6 @@ func (s *Server) handleStream(t transport.ServerTransport, stream *transport.Str
 	if trInfo != nil {
 		trInfo.tr.Finish()
 	}
-}
-
-// The key to save ServerTransportStream in the context.
-type streamKey struct{}
-
-// NewContextWithServerTransportStream creates a new context from ctx and
-// attaches stream to it.
-//
-// This API is EXPERIMENTAL.
-func NewContextWithServerTransportStream(ctx context.Context, stream ServerTransportStream) context.Context {
-	return context.WithValue(ctx, streamKey{}, stream)
-}
-
-// ServerTransportStream is a minimal interface that a transport stream must
-// implement. This can be used to mock an actual transport stream for tests of
-// handler code that use, for example, grpc.SetHeader (which requires some
-// stream to be in context).
-//
-// See also NewContextWithServerTransportStream.
-//
-// This API is EXPERIMENTAL.
-type ServerTransportStream interface {
-	Method() string
-	SetHeader(md metadata.MD) error
-	SendHeader(md metadata.MD) error
-	SetTrailer(md metadata.MD) error
-}
-
-// serverStreamFromContext returns the server stream saved in ctx. Returns
-// nil if the given context has no stream associated with it (which implies
-// it is not an RPC invocation context).
-func serverTransportStreamFromContext(ctx context.Context) ServerTransportStream {
-	s, _ := ctx.Value(streamKey{}).(ServerTransportStream)
-	return s
 }
 
 // Stop stops the gRPC server. It immediately closes all open
@@ -1301,22 +1262,6 @@ func init() {
 	}
 }
 
-// contentSubtype must be lowercase
-// cannot return nil
-func (s *Server) getCodec(contentSubtype string) baseCodec {
-	if s.opts.codec != nil {
-		return s.opts.codec
-	}
-	if contentSubtype == "" {
-		return encoding.GetCodec(proto.Name)
-	}
-	codec := encoding.GetCodec(contentSubtype)
-	if codec == nil {
-		return encoding.GetCodec(proto.Name)
-	}
-	return codec
-}
-
 // SetHeader sets the header metadata.
 // When called multiple times, all the provided metadata will be merged.
 // All the metadata will be sent out when one of the following happens:
@@ -1327,8 +1272,8 @@ func SetHeader(ctx context.Context, md metadata.MD) error {
 	if md.Len() == 0 {
 		return nil
 	}
-	stream := serverTransportStreamFromContext(ctx)
-	if stream == nil {
+	stream, ok := transport.StreamFromContext(ctx)
+	if !ok {
 		return status.Errorf(codes.Internal, "grpc: failed to fetch the stream from the context %v", ctx)
 	}
 	return stream.SetHeader(md)
@@ -1337,11 +1282,15 @@ func SetHeader(ctx context.Context, md metadata.MD) error {
 // SendHeader sends header metadata. It may be called at most once.
 // The provided md and headers set by SetHeader() will be sent.
 func SendHeader(ctx context.Context, md metadata.MD) error {
-	stream := serverTransportStreamFromContext(ctx)
-	if stream == nil {
+	stream, ok := transport.StreamFromContext(ctx)
+	if !ok {
 		return status.Errorf(codes.Internal, "grpc: failed to fetch the stream from the context %v", ctx)
 	}
-	if err := stream.SendHeader(md); err != nil {
+	t := stream.ServerTransport()
+	if t == nil {
+		grpclog.Fatalf("grpc: SendHeader: %v has no ServerTransport to send header metadata.", stream)
+	}
+	if err := t.WriteHeader(stream, md); err != nil {
 		return toRPCErr(err)
 	}
 	return nil
@@ -1353,19 +1302,9 @@ func SetTrailer(ctx context.Context, md metadata.MD) error {
 	if md.Len() == 0 {
 		return nil
 	}
-	stream := serverTransportStreamFromContext(ctx)
-	if stream == nil {
+	stream, ok := transport.StreamFromContext(ctx)
+	if !ok {
 		return status.Errorf(codes.Internal, "grpc: failed to fetch the stream from the context %v", ctx)
 	}
 	return stream.SetTrailer(md)
-}
-
-// Method returns the method string for the server context.  The returned
-// string is in the format of "/service/method".
-func Method(ctx context.Context) (string, bool) {
-	s := serverTransportStreamFromContext(ctx)
-	if s == nil {
-		return "", false
-	}
-	return s.Method(), true
 }
