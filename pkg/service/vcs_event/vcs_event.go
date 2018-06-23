@@ -55,7 +55,6 @@ func (s *vcsEventService) UpdateProject(ctx context.Context, project *model.Proj
 
 	for _, repo := range current.Repositories {
 		for _, branch := range repo.Branches {
-			req := linguist.LanguageRequest{}
 
 			type timeDiff struct {
 				removed bool
@@ -109,6 +108,27 @@ func (s *vcsEventService) UpdateProject(ctx context.Context, project *model.Proj
 					}
 
 				}
+
+				if commit.Meta != nil && len(commit.Meta.Languages) == 0 {
+
+					var filesUptoCurrentCommit []string
+
+					for k, v := range fileStatus {
+						if v.removed {
+							continue
+						}
+						filesUptoCurrentCommit = append(filesUptoCurrentCommit, k)
+					}
+
+					req := linguist.LanguageRequest{
+						FileNames: filesUptoCurrentCommit,
+					}
+
+					if languages := s.GetLanguages(ctx, &req); len(languages) != 0 {
+						commit.Meta.Languages = ConvertToLanguages(languages)
+					}
+
+				}
 			}
 
 			var sanitizedFiles []string
@@ -120,10 +140,12 @@ func (s *vcsEventService) UpdateProject(ctx context.Context, project *model.Proj
 				sanitizedFiles = append(sanitizedFiles, k)
 			}
 
-			req.FileNames = sanitizedFiles
+			req := linguist.LanguageRequest{
+				FileNames: sanitizedFiles,
+			}
 
-			if languages := s.GetLanguagesUsedInBranch(ctx, &req); len(languages) != 0 {
-				branch.Meta.SetLanguages(ConvertToBranchLanguages(languages))
+			if languages := s.GetLanguages(ctx, &req); len(languages) != 0 {
+				branch.Meta.Languages = ConvertToLanguages(languages)
 			}
 
 		}
@@ -141,11 +163,11 @@ func (s *vcsEventService) UpdateProject(ctx context.Context, project *model.Proj
 
 }
 
-func (s *vcsEventService) GetLanguagesUsedInBranch(ctx context.Context, req *linguist.LanguageRequest) []*linguist.Language {
+func (s *vcsEventService) GetLanguages(ctx context.Context, req *linguist.LanguageRequest) []*linguist.Language {
 	res, err := s.linguist.GetLanguages(ctx, req)
 
 	if err != nil {
-		s.logger.Error("Unable to detect Language(s) for branch")
+		s.logger.Error("Unable to detect Language(s)")
 		return make([]*linguist.Language, 0)
 	}
 
@@ -153,8 +175,8 @@ func (s *vcsEventService) GetLanguagesUsedInBranch(ctx context.Context, req *lin
 
 }
 
-func ConvertToBranchLanguages(langs []*linguist.Language) model.BranchLanguages {
-	out := make(model.BranchLanguages)
+func ConvertToLanguages(langs []*linguist.Language) model.Languages {
+	out := make(model.Languages)
 
 	for _, lang := range langs {
 		out[lang.GetName()] = lang.GetPercentage()

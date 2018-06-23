@@ -30,10 +30,10 @@ func TestFromProjectModel(t *testing.T) {
 						Branches: []*model.Branch{
 							{
 								Name: "branch_1",
-								Meta: map[string]interface{}{
-									"languages": map[string]interface{}{
-										"Go": 15.0,
-									},
+								Meta: &model.BranchMeta{
+									Languages: map[string]float64{
+									"Go": 15.0,
+								},
 								},
 								Commits: []*model.Commit{
 									{

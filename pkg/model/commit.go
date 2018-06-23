@@ -6,6 +6,7 @@ import (
 )
 
 type Commit struct {
+	Meta *CommitMeta
 	Sha         string `gorm:"primary_key;size:256"`
 	Message     string `gorm:"type:varchar(256)"`
 	Timestamp   *time.Time

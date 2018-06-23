@@ -19,6 +19,7 @@ func ConvertToProjectModel(from *vcs.VcsPushEvent) *model.Project {
 		fromRepository = from.GetRepository()
 		fromCommits    = from.GetCommits()
 		branch         = &model.Branch{
+			 Meta: &model.BranchMeta{},
 			Name: RemoveRefPrefix(from.GetRef()),
 		}
 	)
@@ -42,9 +43,7 @@ func ConvertToProjectModel(from *vcs.VcsPushEvent) *model.Project {
 	branch.RepositoryName = repo.RepositoryName
 
 	branch.RepositoryType = repo.RepositoryType
-
-	branch.Meta = make(model.BranchMeta)
-
+	
 	branch.Commits = branchCommits
 
 	repo.Branches = append(repo.Branches, branch)
@@ -75,6 +74,7 @@ func ConvertEventCommitToCommitModel(from *vcs.PushCommit) *model.Commit {
 	}
 
 	out := model.Commit{
+		Meta: &model.CommitMeta{},
 		Sha:       from.GetSha(),
 		Message:   from.GetMessage(),
 		Timestamp: timestampPtr,

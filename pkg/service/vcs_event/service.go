@@ -8,5 +8,5 @@ import (
 
 type Service interface {
 	UpdateProject(ctx context.Context, project *model.Project) (*model.Project, error)
-	GetLanguagesUsedInBranch(context.Context, *linguist.LanguageRequest) []*linguist.Language
+	GetLanguages(context.Context, *linguist.LanguageRequest) []*linguist.Language
 }
