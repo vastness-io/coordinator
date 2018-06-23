@@ -97,6 +97,7 @@ func TestConvertEventCommitToCommitModel(t *testing.T) {
 				Removed: []string{},
 			},
 			out: &model.Commit{
+				Meta: &model.CommitMeta{},
 				Sha:         "hash",
 				Timestamp:   toTime("2015-05-05T19:40:15-04:00"),
 				Message:     "some message",
@@ -199,9 +200,10 @@ func TestConvertToProjectModel(t *testing.T) {
 								RepositoryName:  "repo_1",
 								RepositoryOwner: "project_1",
 								RepositoryType:  "GITHUB",
-								Meta:            make(model.BranchMeta),
+								Meta:            &model.BranchMeta{},
 								Commits: []*model.Commit{
 									{
+										Meta: &model.CommitMeta{},
 										Sha:         "hash",
 										Timestamp:   toTime("2015-05-05T19:40:15-04:00"),
 										Message:     "some message",
